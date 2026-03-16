@@ -1,0 +1,27 @@
+[
+    {
+        "symbol": "HOTUSDT",
+        "entry_price": 0.000413,
+        "quantity": 1
+    },
+    {
+        "symbol": "PAXUSDT",
+        "entry_price": 0.9996,
+        "quantity": 1
+    },
+    {
+        "symbol": "BCHSVUSDT",
+        "entry_price": 58.9,
+        "quantity": 1
+    },
+    {
+        "symbol": "WAVESUSDT",
+        "entry_price": 1.076,
+        "quantity": 1
+    },
+    {
+        "symbol": "ETCUSDT",
+        "entry_price": 8.53,
+        "quantity": 1
+    }
+]

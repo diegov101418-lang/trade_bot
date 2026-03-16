@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Trading Bot Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+padding:20px;
+}
+
+h2{
+color:#38bdf8;
+}
+
+.card{
+background:#1e293b;
+padding:15px;
+border-radius:10px;
+margin-bottom:20px;
+}
+
+button{
+padding:10px 15px;
+border:none;
+border-radius:5px;
+margin:5px;
+cursor:pointer;
+}
+
+.start{background:#22c55e;color:white;}
+.stop{background:#ef4444;color:white;}
+.demo{background:#3b82f6;color:white;}
+.real{background:#f59e0b;color:white;}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+td,th{
+padding:10px;
+border-bottom:1px solid #334155;
+}
+
+tr:hover{
+background:#1e293b;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>🤖 Trading Bot Dashboard</h2>
+
+<div class="card">
+
+<h3>Estado del Bot</h3>
+
+<p><b>Bot activo:</b> {{running}}</p>
+<p><b>Modo:</b> {{mode}}</p>
+
+<a href="/start"><button class="start">▶ Iniciar Bot</button></a>
+<a href="/stop"><button class="stop">⏹ Detener Bot</button></a>
+
+<a href="/mode/demo"><button class="demo">Modo Demo</button></a>
+<a href="/mode/real"><button class="real">Modo Real</button></a>
+
+</div>
+
+<div class="card">
+
+<h3>📊 Rendimiento del Bot</h3>
+
+<p><b>Ganancia total:</b> {{performance.profit}}</p>
+<p><b>Pérdida total:</b> {{performance.loss}}</p>
+<p><b>Balance total:</b> {{performance.total}}</p>
+
+</div>
+
+<div class="card">
+
+<h3>📈 Evolución del Balance</h3>
+
+<canvas id="profitChart"></canvas>
+
+</div>
+
+<div class="card">
+
+<h3>📊 Posiciones abiertas</h3>
+
+<table>
+
+<tr>
+<th>Moneda</th>
+<th>Precio entrada</th>
+<th>Cantidad</th>
+</tr>
+
+{% for p in positions %}
+
+<tr>
+<td>{{p.symbol}}</td>
+<td>{{p.entry_price}}</td>
+<td>{{p.quantity}}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+<div class="card">
+
+<h3>📜 Últimas operaciones</h3>
+
+<table>
+
+<tr>
+<th>Moneda</th>
+<th>Acción</th>
+<th>Precio</th>
+<th>PnL</th>
+</tr>
+
+{% for t in trades %}
+
+<tr>
+<td>{{t.symbol}}</td>
+<td>{{t.action}}</td>
+<td>{{t.price}}</td>
+<td>{{t.pnl}}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+<div class="card">
+
+<h3>🔥 Oportunidades detectadas</h3>
+
+<table>
+
+<tr>
+<th>Moneda</th>
+<th>Señal</th>
+<th>Confianza IA</th>
+</tr>
+
+{% for s in signals %}
+
+<tr>
+<td>{{s.symbol}}</td>
+<td>{{s.signal}}</td>
+<td>{{s.confidence}}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+<script>
+
+const data = {{performance.history | tojson }};
+
+const ctx = document.getElementById('profitChart');
+
+new Chart(ctx, {
+
+type: 'line',
+
+data: {
+
+labels: data.map((_,i)=>i),
+
+datasets: [{
+
+label: 'Balance del Bot',
+
+data: data
+
+}]
+
+}
+
+});
+
+</script>
+
+</body>
+</html>

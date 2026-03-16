@@ -1,0 +1,7 @@
+python-binance
+pandas
+numpy
+flask
+requests
+scikit-learn
+schedule

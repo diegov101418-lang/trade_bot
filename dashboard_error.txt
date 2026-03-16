@@ -1,0 +1,161 @@
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.12:5000
+Press CTRL+C to quit
+127.0.0.1 - - [14/Mar/2026 19:49:33] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 19:49:33] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [14/Mar/2026 19:49:35] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 19:49:35] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 19:49:54] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 19:49:54] "GET / HTTP/1.1" 200 -
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.12:5000
+Press CTRL+C to quit
+[2026-03-14 20:02:51,648] ERROR in app: Exception on / [GET]
+Traceback (most recent call last):
+  File "C:\Users\Ari pc\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Ari pc\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Ari pc\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Ari pc\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Ari pc\Desktop\TRADING_bot2\dashboard.py", line 49, in dashboard
+    running=is_running(),
+            ~~~~~~~~~~^^
+  File "C:\Users\Ari pc\Desktop\TRADING_bot2\bot_controller.py", line 41, in is_running
+    return state["running"]
+           ~~~~~^^^^^^^^^^^
+KeyError: 'running'
+127.0.0.1 - - [14/Mar/2026 20:02:51] "GET / HTTP/1.1" 500 -
+[2026-03-14 20:03:09,048] ERROR in app: Exception on / [GET]
+Traceback (most recent call last):
+  File "C:\Users\Ari pc\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Ari pc\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Ari pc\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Ari pc\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Ari pc\Desktop\TRADING_bot2\dashboard.py", line 49, in dashboard
+    running=is_running(),
+            ~~~~~~~~~~^^
+  File "C:\Users\Ari pc\Desktop\TRADING_bot2\bot_controller.py", line 41, in is_running
+    return state["running"]
+           ~~~~~^^^^^^^^^^^
+KeyError: 'running'
+127.0.0.1 - - [14/Mar/2026 20:03:09] "GET / HTTP/1.1" 500 -
+[2026-03-14 20:03:22,066] ERROR in app: Exception on / [GET]
+Traceback (most recent call last):
+  File "C:\Users\Ari pc\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Ari pc\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Ari pc\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Ari pc\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Ari pc\Desktop\TRADING_bot2\dashboard.py", line 49, in dashboard
+    running=is_running(),
+            ~~~~~~~~~~^^
+  File "C:\Users\Ari pc\Desktop\TRADING_bot2\bot_controller.py", line 41, in is_running
+    return state["running"]
+           ~~~~~^^^^^^^^^^^
+KeyError: 'running'
+192.168.1.12 - - [14/Mar/2026 20:03:22] "GET / HTTP/1.1" 500 -
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.12:5000
+Press CTRL+C to quit
+127.0.0.1 - - [14/Mar/2026 20:06:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:06:19] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:06:19] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:06:39] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:06:39] "GET / HTTP/1.1" 200 -
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.12:5000
+Press CTRL+C to quit
+127.0.0.1 - - [14/Mar/2026 20:07:00] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:07:09] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:07:09] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:07:24] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:07:24] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:07:24] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:07:24] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:07:25] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:07:25] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:07:25] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:07:25] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:07:26] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:07:26] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:07:27] "GET /stop HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:07:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:07:30] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:07:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:07:30] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:07:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:07:31] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:07:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:07:31] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:07:31] "GET / HTTP/1.1" 200 -
+192.168.1.12 - - [14/Mar/2026 20:13:42] "GET / HTTP/1.1" 200 -
+192.168.1.12 - - [14/Mar/2026 20:13:48] "GET /start HTTP/1.1" 302 -
+192.168.1.12 - - [14/Mar/2026 20:13:48] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:14:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:14:45] "GET /stop HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:14:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:14:51] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:14:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:16:53] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:17:08] "GET /stop HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:17:08] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:17:16] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:17:16] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:32:26] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:32:33] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:32:33] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:32:45] "GET /stop HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:32:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:32:46] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:32:46] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:33:13] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:33:13] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:33:14] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:33:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:33:15] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:33:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:33:15] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:33:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:33:15] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:33:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:33:16] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:33:16] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 20:33:16] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 20:33:16] "GET / HTTP/1.1" 200 -
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.12:5000
+Press CTRL+C to quit
+127.0.0.1 - - [14/Mar/2026 21:40:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 21:40:15] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [14/Mar/2026 21:40:26] "GET /stop HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 21:40:26] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 21:40:32] "GET /start HTTP/1.1" 302 -
+127.0.0.1 - - [14/Mar/2026 21:40:32] "GET / HTTP/1.1" 200 -
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.12:5000
+Press CTRL+C to quit
