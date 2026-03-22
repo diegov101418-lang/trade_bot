@@ -2,20 +2,22 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 import joblib
 import os
-
-MODEL_FILE = "model.pkl"
-
+import numpy as np
 import time
 
+MODEL_FILE = "model.pkl"
 LAST_TRAIN = 0
 
+
+# =========================
+# AUTO TRAIN
+# =========================
 def auto_train():
 
     global LAST_TRAIN
 
     now = time.time()
 
-    # cada 5 minutos
     if now - LAST_TRAIN > 300:
         print("🧠 Reentrenando IA...")
         train_model()
@@ -39,33 +41,43 @@ def train_model():
 
     try:
         # =========================
-        # CREAR FEATURES SI FALTAN
+        # LIMPIEZA PRO 🔥
         # =========================
+        df = df.replace([np.inf, -np.inf], np.nan)
 
+        # eliminar filas sin resultado
+        df = df[df["result"] != ""]
+        
+        # convertir a numérico seguro
+        df["result"] = pd.to_numeric(df["result"], errors="coerce")
+
+        # eliminar NaN
+        df = df.dropna()
+
+        if len(df) < 30:
+            print("⚠ Dataset insuficiente tras limpieza")
+            return None
+
+        # =========================
+        # FEATURES
+        # =========================
         if "ma50" not in df.columns or "price" not in df.columns:
             print("⚠ Faltan columnas base")
             return None
 
-        # trend = tendencia alcista
         if "trend" not in df.columns:
             df["trend"] = (df["price"] > df["ma50"]).astype(int)
 
-        # momentum = fuerza del movimiento
         if "momentum" not in df.columns:
             df["momentum"] = df["price"] - df["ma50"]
 
-        # validaciones
-        if "rsi" not in df.columns:
-            print("⚠ Falta RSI")
-            return None
+        # asegurar tipos
+        df["rsi"] = pd.to_numeric(df["rsi"], errors="coerce")
+        df["volume"] = pd.to_numeric(df["volume"], errors="coerce")
+        df["trend"] = pd.to_numeric(df["trend"], errors="coerce")
+        df["momentum"] = pd.to_numeric(df["momentum"], errors="coerce")
 
-        if "volume" not in df.columns:
-            print("⚠ Falta volumen")
-            return None
-
-        if "result" not in df.columns:
-            print("⚠ Falta result")
-            return None
+        df = df.dropna()
 
         # =========================
         # DATASET FINAL
@@ -78,7 +90,7 @@ def train_model():
 
         joblib.dump(model, MODEL_FILE)
 
-        print("✅ Modelo IA entrenado correctamente")
+        print(f"✅ Modelo IA entrenado | samples: {len(df)}")
 
         return model
 
@@ -105,28 +117,20 @@ def load_model():
 # IA PRINCIPAL
 # =========================
 def predict_trade(data):
-    """
-    data = {
-        rsi,
-        volume,
-        trend,
-        momentum
-    }
-    """
 
     model = load_model()
 
     # =========================
-    # IA REAL (si hay modelo)
+    # IA REAL
     # =========================
     if model:
         try:
-            X = [[
-                data.get("rsi", 50),
-                data.get("volume", 1),
-                int(data.get("trend", 0)),
-                data.get("momentum", 0)
-            ]]
+            X = pd.DataFrame([{
+                "rsi": data.get("rsi", 50),
+                "volume": data.get("volume", 1),
+                "trend": int(data.get("trend", 0)),
+                "momentum": data.get("momentum", 0)
+            }])
 
             pred = model.predict(X)[0]
             return int(pred)
@@ -135,7 +139,7 @@ def predict_trade(data):
             print("⚠ Error modelo IA:", e)
 
     # =========================
-    # FALLBACK INTELIGENTE
+    # FALLBACK
     # =========================
     score = 0
 
