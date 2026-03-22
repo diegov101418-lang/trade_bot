@@ -11,28 +11,29 @@ body {
     background: #0b0f19;
     color: #e6e6e6;
     font-family: Arial;
-    margin: 0;
     padding: 20px;
 }
 
 h1 { color: #ff3b3b; }
 
-.container {
-    max-width: 1300px;
-    margin: auto;
-}
-
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 15px;
 }
 
 .card {
     background: #121826;
     padding: 15px;
-    border-radius: 12px;
-    box-shadow: 0 0 10px rgba(255,0,0,0.1);
+    border-radius: 10px;
+}
+
+button {
+    padding: 8px;
+    margin: 3px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
 }
 
 .green { color: #00ff9c; }
@@ -40,90 +41,39 @@ h1 { color: #ff3b3b; }
 
 table {
     width: 100%;
-    border-collapse: collapse;
-}
-
-th, td {
-    padding: 8px;
     text-align: center;
-    border-bottom: 1px solid #222;
-}
-
-button {
-    padding: 8px 12px;
-    border: none;
-    border-radius: 6px;
-    margin: 5px;
-    cursor: pointer;
-}
-
-.btn-start { background: #00c853; }
-.btn-stop { background: #d50000; }
-.btn-demo { background: #2962ff; }
-.btn-real { background: #ff6d00; }
-
-canvas {
-    background: #0b0f19;
-    border-radius: 10px;
-}
-
-.badge {
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-}
-
-.mode-demo { background: #2962ff; }
-.mode-real { background: #ff6d00; }
-
-.alert {
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    font-weight: bold;
-}
-
-.alert-danger {
-    background: #ff4d4d33;
-    color: #ff4d4d;
-}
-
-.alert-warning {
-    background: #ffaa0033;
-    color: #ffaa00;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-
 <h1>🚀 Trading Bot PRO</h1>
-<h3>Modo: <span id="mode"></span></h3>
 
-<div id="alerts"></div>
+<p>
+Modo: <b id="mode"></b> |
+Estado: <b id="running"></b> |
+Estrategia: <b id="strategy"></b>
+</p>
 
-<!-- CONTROLES -->
 <div class="card">
-    <h3>Control</h3>
-    <a href="/start"><button class="btn-start">Start</button></a>
-    <a href="/stop"><button class="btn-stop">Stop</button></a>
-    <a href="/mode/demo"><button class="btn-demo">Demo</button></a>
-    <a href="/mode/real"><button class="btn-real">Real</button></a>
+    <a href="/start"><button>Start</button></a>
+    <a href="/stop"><button>Stop</button></a>
+    <a href="/mode/demo"><button>Demo</button></a>
+    <a href="/mode/real"><button>Real</button></a>
+
+    <hr>
+
+    <a href="/strategy/auto"><button>Auto</button></a>
+    <a href="/strategy/trend"><button>Trend</button></a>
+    <a href="/strategy/scalping"><button>Scalping</button></a>
 </div>
 
-<!-- STATS -->
 <div class="grid">
 
 <div class="card">
     <h3>Balance</h3>
     <h2 id="balance">0</h2>
-</div>
-
-<div class="card">
-    <h3>Profit</h3>
-    <h2 id="profit">0</h2>
 </div>
 
 <div class="card">
@@ -136,38 +86,15 @@ canvas {
     <h2 id="trades">0</h2>
 </div>
 
-<div class="card">
-    <h3>Drawdown</h3>
-    <h2 id="drawdown">0%</h2>
 </div>
 
 <div class="card">
-    <h3>Profit Diario</h3>
-    <h2 id="daily_profit">0</h2>
-</div>
-
-</div>
-
-<!-- GRAFICO -->
-<div class="card">
-    <h3>📈 Equity Curve</h3>
     <canvas id="chart"></canvas>
 </div>
 
-<!-- POSICIONES -->
 <div class="card">
-    <h3>📊 Posiciones</h3>
-    <table id="positions">
-        <tr>
-            <th>Symbol</th>
-            <th>Entry</th>
-            <th>Actual</th>
-            <th>Qty</th>
-            <th>PnL %</th>
-        </tr>
-    </table>
-</div>
-
+    <h3>Posiciones</h3>
+    <table id="positions"></table>
 </div>
 
 <script>
@@ -178,101 +105,62 @@ async function update() {
     const res = await fetch('/api/data');
     const data = await res.json();
 
-    // ===== STATS =====
     document.getElementById("balance").innerText = data.balance.toFixed(2);
-    document.getElementById("profit").innerText = data.performance.profit.toFixed(2);
     document.getElementById("winrate").innerText = data.stats.winrate + "%";
     document.getElementById("trades").innerText = data.stats.wins + data.stats.losses;
-    document.getElementById("drawdown").innerText = data.performance.drawdown + "%";
-    document.getElementById("daily_profit").innerText = data.performance.daily_profit.toFixed(2);
 
-    // ===== MODO =====
-    let modeEl = document.getElementById("mode");
-    modeEl.innerHTML = `
-        <span class="badge ${data.mode === "real" ? "mode-real" : "mode-demo"}">
-            ${data.mode.toUpperCase()}
-        </span>
-    `;
+    document.getElementById("mode").innerText = data.mode;
+    document.getElementById("running").innerText = data.running ? "ON" : "OFF";
+    document.getElementById("strategy").innerText = data.strategy;
 
-    // ===== ALERTAS =====
-    let alertsDiv = document.getElementById("alerts");
-    alertsDiv.innerHTML = "";
-
-    if (data.performance.drawdown > 5) {
-        alertsDiv.innerHTML += `<div class="alert alert-warning">⚠ Drawdown alto</div>`;
-    }
-
-    if (data.performance.drawdown > 10) {
-        alertsDiv.innerHTML += `<div class="alert alert-danger">⛔ Drawdown crítico</div>`;
-    }
-
-    if (data.stats.winrate < 40) {
-        alertsDiv.innerHTML += `<div class="alert alert-warning">⚠ IA bajo rendimiento</div>`;
-    }
-
-    // ===== GRAFICO =====
+    // chart
     if (!chart) {
-        const ctx = document.getElementById('chart').getContext('2d');
-
+        const ctx = document.getElementById("chart");
         chart = new Chart(ctx, {
-            type: 'line',
+            type: "line",
             data: {
-                labels: [],
+                labels: data.history.map((_, i) => i),
                 datasets: [{
-                    label: 'Balance',
-                    data: [],
-                    tension: 0.2
+                    data: data.history
                 }]
             }
         });
+    } else {
+        chart.data.labels = data.history.map((_, i) => i);
+        chart.data.datasets[0].data = data.history;
+        chart.update();
     }
 
-    let last = data.history[data.history.length - 1];
-    let prev = data.history[data.history.length - 2] || last;
-
-    let color = last >= prev ? "#00ff9c" : "#ff4d4d";
-
-    chart.data.labels = data.history.map((_, i) => i);
-    chart.data.datasets[0].data = data.history;
-    chart.data.datasets[0].borderColor = color;
-    chart.update();
-
-    // ===== POSICIONES =====
-    let table = document.getElementById("positions");
-
-    table.innerHTML = `
-        <tr>
-            <th>Symbol</th>
-            <th>Entry</th>
-            <th>Actual</th>
-            <th>Qty</th>
-            <th>PnL %</th>
-        </tr>
-    `;
+    // tabla
+    let table = `
+    <tr>
+        <th>Symbol</th>
+        <th>Entry</th>
+        <th>Actual</th>
+        <th>PnL %</th>
+    </tr>`;
 
     data.positions.forEach(p => {
 
         let pnl = 0;
-
         if (p.current_price && p.entry_price) {
             pnl = ((p.current_price - p.entry_price) / p.entry_price) * 100;
         }
 
         let color = pnl >= 0 ? "green" : "red";
 
-        table.innerHTML += `
-            <tr>
-                <td>${p.symbol}</td>
-                <td>${p.entry_price}</td>
-                <td>${p.current_price || "-"}</td>
-                <td>${p.quantity || "-"}</td>
-                <td class="${color}">${pnl.toFixed(2)}%</td>
-            </tr>
-        `;
+        table += `
+        <tr>
+            <td>${p.symbol}</td>
+            <td>${p.entry_price}</td>
+            <td>${p.current_price || "-"}</td>
+            <td class="${color}">${pnl.toFixed(2)}%</td>
+        </tr>`;
     });
+
+    document.getElementById("positions").innerHTML = table;
 }
 
-// refresh
 setInterval(update, 3000);
 </script>
 
