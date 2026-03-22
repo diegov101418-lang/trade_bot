@@ -1,25 +1,48 @@
-def bull_strategy(rsi):
+def detect_opportunities(symbols):
 
-    if rsi < 35:
-        return "buy"
+    opportunities = []
 
-    return "wait"
+    for symbol in symbols:
 
+        try:
+            from indicators import get_indicators
 
-def bear_strategy(rsi):
+            df = get_indicators(symbol)
 
-    if rsi > 65:
-        return "sell"
+            if df is None or len(df) < 100:
+                continue
 
-    return "wait"
+            last = df.iloc[-1]
 
+            rsi = last["rsi"]
+            volume = last["volume"]
+            price = last["close"]
 
-def sideways_strategy(rsi):
+            avg_volume = df["volume"].rolling(30).mean().iloc[-1]
 
-    if rsi < 30:
-        return "buy"
+            prev_price = df["close"].iloc[-5]
+            price_change = (price - prev_price) / prev_price
 
-    if rsi > 70:
-        return "sell"
+            score = 0
 
-    return "wait"
+            if 25 < rsi < 40:
+                score += 2
+
+            if volume > avg_volume * 1.3:
+                score += 2
+
+            if price_change > 0.005:
+                score += 1
+
+            if score >= 3:
+                opportunities.append({
+                    "symbol": symbol,
+                    "score": score
+                })
+
+        except Exception as e:
+            print("Error en opportunity:", symbol, e)
+
+    opportunities.sort(key=lambda x: x["score"], reverse=True)
+
+    return opportunities

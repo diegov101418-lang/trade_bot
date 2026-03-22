@@ -1,220 +1,331 @@
 import time
 
-from bot_controller import is_running, get_mode
-from scanner import scan_market
+from risk_manager import check_limits, register_trade, get_winrate, update_trade_result
 from indicators import get_indicators
-from breakout_detector import detect_breakout
-from market_regime import detect_market
-from strategies import bull_strategy, bear_strategy, sideways_strategy
-from ai_predictor import predict_trade
-from opportunity_scanner import detect_opportunities
+from scanner import scan_market
+from market_ranker import rank_symbols
+from ai_model import predict_trade, auto_train
 
 from position_manager import (
-    can_open_new_position,
     add_position,
-    remove_position,
+    close_position,
     get_open_positions
 )
 
-from telegram_alerts import send_message
-from logger import log_trade
+from config import (
+    is_running,
+    load_best_config,
+    RISK_PER_TRADE,
+    MAX_POSITIONS,
+    get_mode
+)
+
+from portfolio import get_balance, update_balance
+from executor import buy, sell
 
 
-# ===============================
-# ANALIZAR UNA MONEDA
-# ===============================
+# =========================
+# TRAILING + CONTROL
+# =========================
+trailing_data = {}
+last_trade_time = {}
 
+def update_trailing(symbol, price, atr):
+
+    if symbol not in trailing_data:
+        trailing_data[symbol] = {"max_price": price}
+
+    if price > trailing_data[symbol]["max_price"]:
+        trailing_data[symbol]["max_price"] = price
+
+    max_price = trailing_data[symbol]["max_price"]
+
+    if price < max_price - (atr * 1.5):
+        return True
+
+    return False
+
+
+def can_trade(symbol):
+
+    now = time.time()
+
+    if symbol in last_trade_time:
+        if now - last_trade_time[symbol] < 300:
+            return False
+
+    last_trade_time[symbol] = now
+    return True
+
+
+# =========================
+# CONFIG DINÁMICA
+# =========================
+def get_strategy():
+
+    best = load_best_config()
+
+    if best:
+        return best["rsi"], best["tp"], best["sl"]
+
+    return 35, 0.04, -0.02
+
+
+# =========================
+# PROCESAR MONEDA
+# =========================
 def process_symbol(symbol):
 
     try:
-
         df = get_indicators(symbol)
 
         if df is None or len(df) < 200:
             return
 
-        rsi = df["rsi"].iloc[-1]
-        ma50 = df["ma50"].iloc[-1]
-        ma200 = df["ma200"].iloc[-1]
-        volume = df["volume"].iloc[-1]
-        price = df["close"].iloc[-1]
+        last = df.iloc[-1]
 
-        market = detect_market(df)
-        breakout = detect_breakout(df)
-
-        # estrategia según mercado
-        if market == "bull":
-            action = bull_strategy(rsi)
-
-        elif market == "bear":
-            action = bear_strategy(rsi)
-
-        else:
-            action = sideways_strategy(rsi)
-
-        # ruptura fuerte
-        if breakout:
-            action = "buy"
-
-        # filtro IA
-        ai_prediction = predict_trade(rsi, ma50, ma200, volume)
-
-        if ai_prediction == 0:
-            action = "wait"
-
-        # ===============================
-        # COMPRA
-        # ===============================
-
-        if action == "buy":
-
-            if can_open_new_position():
-
-                quantity = 1
-
-                print("📈 Compra detectada:", symbol, price)
-
-                mode = get_mode()
-
-                if mode == "real":
-                    # aquí iría la orden real
-                    pass
-
-                add_position(symbol, price, quantity)
-
-                send_message(f"🚀 Compra {symbol} a {price}")
-
-                log_trade(
-                    symbol,
-                    "buy",
-                    price,
-                    quantity,
-                    rsi,
-                    ma50,
-                    ma200,
-                    volume,
-                    1
-                )
-
-        check_positions()
+        price = float(last["close"])
+        rsi = float(last["rsi"])
+        ma50 = float(last["ma50"])
+        ma200 = float(last["ma200"])
+        volume = float(last["volume"])
+        avg_volume = float(df["volume"].mean())
+        atr = float(last["atr"])
 
     except Exception as e:
+        print(f"❌ Error datos {symbol}:", e)
+        return
 
-        print("Error analizando", symbol)
-        print("Detalle:", e)
-
-
-# ===============================
-# REVISAR POSICIONES
-# ===============================
-
-def check_positions():
+    BEST_RSI, BEST_TP, BEST_SL = get_strategy()
 
     positions = get_open_positions()
+    symbols_open = [p["symbol"] for p in positions]
 
-    for pos in positions:
+    mode = get_mode()
 
-        symbol = pos["symbol"]
-        entry = pos["entry_price"]
-        quantity = pos["quantity"]
+    # =========================
+    # BUY
+    # =========================
+    if symbol not in symbols_open:
+
+        if len(positions) >= MAX_POSITIONS:
+            return
+
+        if avg_volume < 100000:
+            return
+
+        if not can_trade(symbol):
+            return
+
+        print(f"{symbol} | price:{price} rsi:{rsi}")
+
+        # =========================
+        # FILTRO MERCADO (PRO)
+        # =========================
+        bearish = ma50 < ma200 and price < ma50
+
+        if bearish:
+            print("📉 Mercado bajista, esperando recuperacion")
+            return
+        if ma50 < ma200:
+            if rsi < 30 and volume > avg_volume * 2:
+                print ("Rebote en mercado bajista")
+            else:
+                return
+        
+        #Recuperacion
+        recovery = (
+            price > ma50 and
+            rsi > 40 and
+            volume > avg_volume
+            )
+
+        # =========================
+        # IA
+        # =========================
+        vol_ratio = volume / avg_volume if avg_volume > 0 else 1
+
+        ai_decision = predict_trade({
+            "rsi": rsi,
+            "volume": vol_ratio,
+            "trend": price > ma50,
+            "momentum": price - ma50
+        })
+
+        if ai_decision == 0:
+            print(f"❌ IA bloquea {symbol}")
+            return
+
+        # =========================
+        # CONDICIONES COMPRA
+        # =========================
+        if (
+            price > ma50 and
+            ma50 > ma200 and
+            rsi < BEST_RSI and
+            volume > avg_volume
+        ):
+
+            print(f"🚀 COMPRA: {symbol} {price} | modo: {mode}")
+
+            try:
+                balance = get_balance()
+
+                if balance < 10:
+                    print("⚠ Balance insuficiente")
+                    return
+
+                # =========================
+                # WINRATE PROTECTION
+                # =========================
+                winrate = get_winrate()
+
+                if winrate < 0.5 and len(positions) > 5:
+                    print("⚠ IA con bajo rendimiento, filtrando trades")
+                    return
+
+                risk_amount = balance * RISK_PER_TRADE
+
+                stop_loss_price = price * (1 + BEST_SL)
+                risk_per_unit = abs(price - stop_loss_price)
+
+                if risk_per_unit <= 0:
+                    return
+
+                quantity = risk_amount / risk_per_unit
+                quantity = round(quantity, 6)
+
+                if quantity <= 0:
+                    return
+
+                if not check_limits(balance):
+                    print("⛔ Riesgo bloqueado")
+                    return
+
+                # =========================
+                # ABRIR POSICIÓN
+                # =========================
+                add_position(symbol, price, quantity)
+
+                # guardar trade IA
+                register_trade({
+                    "symbol": symbol,
+                    "rsi": rsi,
+                    "volume": vol_ratio,
+                    "trend": int(price > ma50),
+                    "momentum": price - ma50,
+                    "result": 0
+                })
+
+                if mode == "real":
+                    buy(symbol, quantity)
+
+            except Exception as e:
+                print("❌ Error al abrir posición:", e)
+
+    # =========================
+    # SELL
+    # =========================
+    else:
 
         try:
+            pos = next((p for p in positions if p["symbol"] == symbol), None)
 
-            df = get_indicators(symbol)
+            if not pos:
+                return
 
-            if df is None:
-                continue
+            entry = float(pos["entry_price"])
+            quantity = float(pos["quantity"])
 
-            price = df["close"].iloc[-1]
+            profit_pct = (price - entry) / entry
+            pnl = (price - entry) * quantity
 
-            profit = (price - entry) / entry
+            # =========================
+            # TRAILING
+            # =========================
+            if update_trailing(symbol, price, atr):
 
-            take_profit = 0.03
-            stop_loss = -0.02
+                print(f"📉 TRAILING STOP: {symbol}")
 
-            if profit >= take_profit or profit <= stop_loss:
+                close_position(symbol, price)
+                update_balance(pnl)
 
-                print("📉 Cerrando posición", symbol)
+                result = 1 if pnl > 0 else 0
+                update_trade_result(symbol, result)
 
-                remove_position(symbol)
+                if mode == "real":
+                    sell(symbol, quantity)
 
-                send_message(f"📉 Venta {symbol} profit {profit:.2%}")
+                trailing_data.pop(symbol, None)
+                return
 
-                log_trade(
-                    symbol,
-                    "sell",
-                    price,
-                    quantity,
-                    0,
-                    0,
-                    0,
-                    0,
-                    profit
-                )
+            # =========================
+            # TP / SL
+            # =========================
+            if profit_pct >= BEST_TP or profit_pct <= BEST_SL:
+
+                print(f"💰 CIERRE: {symbol} Profit: {profit_pct:.4f}")
+
+                close_position(symbol, price)
+                update_balance(pnl)
+
+                result = 1 if pnl > 0 else 0
+                update_trade_result(symbol, result)
+
+                if mode == "real":
+                    sell(symbol, quantity)
+
+                trailing_data.pop(symbol, None)
 
         except Exception as e:
+            print(f"❌ Error cerrando {symbol}:", e)
 
-            print("Error cerrando posición", symbol, e)
 
-
-# ===============================
-# CICLO DEL BOT
-# ===============================
-
+# =========================
+# CICLO PRINCIPAL
+# =========================
 def run_cycle():
 
-    print("\n🔎 Escaneando mercado...")
+    auto_train()  # 🔥 IA se entrena sola
+
+    print("🔎 Escaneando mercado...")
+
+    for pos in get_open_positions():
+        process_symbol(pos["symbol"])
 
     symbols = scan_market()
+    opportunities = rank_symbols(symbols)
 
-    # detectar oportunidades
-    opportunities = detect_opportunities(symbols)
-
-    print("\n🔥 TOP OPORTUNIDADES")
+    print(f"📊 Oportunidades: {len(opportunities)}")
 
     for op in opportunities[:5]:
-
-        print(
-            op["symbol"],
-            "| volumen x", op["volume_ratio"],
-            "| cambio", op["price_change"], "%"
-        )
-
-    # analizar todas las monedas
-    for symbol in symbols:
-
-        process_symbol(symbol)
+        process_symbol(op["symbol"])
 
 
-# ===============================
-# LOOP PRINCIPAL
-# ===============================
+# =========================
+# LOOP BOT
+# =========================
+def start_bot():
 
-def run_bot():
-
-    print("🤖 Bot iniciado")
+    print("🤖 BOT INICIADO (controlado por dashboard)")
 
     while True:
 
-        running = is_running()
-
-        print("Estado bot:", running)
-
-        if not running:
-
-            print("⏸ Bot detenido")
+        if not is_running():
+            print("⏸ Bot en pausa...")
             time.sleep(5)
             continue
 
-        run_cycle()
+        try:
+            run_cycle()
+        except Exception as e:
+            print("🔥 Error:", e)
 
-        time.sleep(10)
+        time.sleep(30)
 
 
-# ===============================
-# INICIO
-# ===============================
-
+# =========================
+# MAIN
+# =========================
 if __name__ == "__main__":
-
-    run_bot()
+    start_bot()

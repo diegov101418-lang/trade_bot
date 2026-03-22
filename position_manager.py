@@ -30,28 +30,40 @@ def can_open_new_position():
     return False
 
 
+positions = []
+
+
 def add_position(symbol, price, quantity):
 
-    positions = load_positions()
-
-    positions.append({
+    position = {
         "symbol": symbol,
         "entry_price": price,
         "quantity": quantity
-    })
+    }
 
-    save_positions(positions)
+    positions.append(position)
 
-
-def remove_position(symbol):
-
-    positions = load_positions()
-
-    positions = [p for p in positions if p["symbol"] != symbol]
-
-    save_positions(positions)
+    print(f"Posición abierta: {symbol} | price: {price} | qty: {quantity}")
 
 
 def get_open_positions():
+    return positions
 
-    return load_positions()
+
+def close_position(symbol, price):
+
+    global positions
+
+    for pos in positions:
+
+        if pos["symbol"] == symbol:
+
+            entry = float(pos["entry_price"])
+            qty = float(pos["quantity"])
+
+            pnl = (price - entry) * qty
+
+            print(f"Cerrada {symbol} | PnL: {pnl}")
+
+            positions.remove(pos)
+            return

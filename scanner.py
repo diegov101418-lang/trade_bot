@@ -3,16 +3,20 @@ from config import API_KEY, API_SECRET
 
 client = Client(API_KEY, API_SECRET)
 
+import requests
+
 def scan_market():
 
-    tickers = client.get_ticker()
+    url = "https://api.binance.com/api/v3/ticker/24hr"
+    data = requests.get(url).json()
 
-    pairs = []
+    symbols = []
 
-    for t in tickers:
+    for coin in data:
 
-        if "USDT" in t["symbol"]:
+        symbol = coin["symbol"]
 
-            pairs.append(t["symbol"])
+        if "USDT" in symbol and float(coin["quoteVolume"]) > 1000000:
+            symbols.append(symbol)
 
-    return pairs[:30]
+    return symbols

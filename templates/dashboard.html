@@ -1,206 +1,279 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="es">
 <head>
-
-<title>Trading Bot Dashboard</title>
+<meta charset="UTF-8">
+<title>Trading Bot PRO</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-
-body{
-font-family:Arial;
-background:#0f172a;
-color:white;
-padding:20px;
+body {
+    background: #0b0f19;
+    color: #e6e6e6;
+    font-family: Arial;
+    margin: 0;
+    padding: 20px;
 }
 
-h2{
-color:#38bdf8;
+h1 { color: #ff3b3b; }
+
+.container {
+    max-width: 1300px;
+    margin: auto;
 }
 
-.card{
-background:#1e293b;
-padding:15px;
-border-radius:10px;
-margin-bottom:20px;
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
 }
 
-button{
-padding:10px 15px;
-border:none;
-border-radius:5px;
-margin:5px;
-cursor:pointer;
+.card {
+    background: #121826;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(255,0,0,0.1);
 }
 
-.start{background:#22c55e;color:white;}
-.stop{background:#ef4444;color:white;}
-.demo{background:#3b82f6;color:white;}
-.real{background:#f59e0b;color:white;}
+.green { color: #00ff9c; }
+.red { color: #ff4d4d; }
 
-table{
-width:100%;
-border-collapse:collapse;
+table {
+    width: 100%;
+    border-collapse: collapse;
 }
 
-td,th{
-padding:10px;
-border-bottom:1px solid #334155;
+th, td {
+    padding: 8px;
+    text-align: center;
+    border-bottom: 1px solid #222;
 }
 
-tr:hover{
-background:#1e293b;
+button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    margin: 5px;
+    cursor: pointer;
 }
 
+.btn-start { background: #00c853; }
+.btn-stop { background: #d50000; }
+.btn-demo { background: #2962ff; }
+.btn-real { background: #ff6d00; }
+
+canvas {
+    background: #0b0f19;
+    border-radius: 10px;
+}
+
+.badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.mode-demo { background: #2962ff; }
+.mode-real { background: #ff6d00; }
+
+.alert {
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.alert-danger {
+    background: #ff4d4d33;
+    color: #ff4d4d;
+}
+
+.alert-warning {
+    background: #ffaa0033;
+    color: #ffaa00;
+}
 </style>
-
 </head>
 
 <body>
 
-<h2>🤖 Trading Bot Dashboard</h2>
+<div class="container">
+
+<h1>🚀 Trading Bot PRO</h1>
+<h3>Modo: <span id="mode"></span></h3>
+
+<div id="alerts"></div>
+
+<!-- CONTROLES -->
+<div class="card">
+    <h3>Control</h3>
+    <a href="/start"><button class="btn-start">Start</button></a>
+    <a href="/stop"><button class="btn-stop">Stop</button></a>
+    <a href="/mode/demo"><button class="btn-demo">Demo</button></a>
+    <a href="/mode/real"><button class="btn-real">Real</button></a>
+</div>
+
+<!-- STATS -->
+<div class="grid">
 
 <div class="card">
-
-<h3>Estado del Bot</h3>
-
-<p><b>Bot activo:</b> {{running}}</p>
-<p><b>Modo:</b> {{mode}}</p>
-
-<a href="/start"><button class="start">▶ Iniciar Bot</button></a>
-<a href="/stop"><button class="stop">⏹ Detener Bot</button></a>
-
-<a href="/mode/demo"><button class="demo">Modo Demo</button></a>
-<a href="/mode/real"><button class="real">Modo Real</button></a>
-
+    <h3>Balance</h3>
+    <h2 id="balance">0</h2>
 </div>
 
 <div class="card">
-
-<h3>📊 Rendimiento del Bot</h3>
-
-<p><b>Ganancia total:</b> {{performance.profit}}</p>
-<p><b>Pérdida total:</b> {{performance.loss}}</p>
-<p><b>Balance total:</b> {{performance.total}}</p>
-
+    <h3>Profit</h3>
+    <h2 id="profit">0</h2>
 </div>
 
 <div class="card">
-
-<h3>📈 Evolución del Balance</h3>
-
-<canvas id="profitChart"></canvas>
-
+    <h3>Winrate</h3>
+    <h2 id="winrate">0%</h2>
 </div>
 
 <div class="card">
-
-<h3>📊 Posiciones abiertas</h3>
-
-<table>
-
-<tr>
-<th>Moneda</th>
-<th>Precio entrada</th>
-<th>Cantidad</th>
-</tr>
-
-{% for p in positions %}
-
-<tr>
-<td>{{p.symbol}}</td>
-<td>{{p.entry_price}}</td>
-<td>{{p.quantity}}</td>
-</tr>
-
-{% endfor %}
-
-</table>
-
+    <h3>Trades</h3>
+    <h2 id="trades">0</h2>
 </div>
 
 <div class="card">
-
-<h3>📜 Últimas operaciones</h3>
-
-<table>
-
-<tr>
-<th>Moneda</th>
-<th>Acción</th>
-<th>Precio</th>
-<th>PnL</th>
-</tr>
-
-{% for t in trades %}
-
-<tr>
-<td>{{t.symbol}}</td>
-<td>{{t.action}}</td>
-<td>{{t.price}}</td>
-<td>{{t.pnl}}</td>
-</tr>
-
-{% endfor %}
-
-</table>
-
+    <h3>Drawdown</h3>
+    <h2 id="drawdown">0%</h2>
 </div>
 
 <div class="card">
+    <h3>Profit Diario</h3>
+    <h2 id="daily_profit">0</h2>
+</div>
 
-<h3>🔥 Oportunidades detectadas</h3>
+</div>
 
-<table>
+<!-- GRAFICO -->
+<div class="card">
+    <h3>📈 Equity Curve</h3>
+    <canvas id="chart"></canvas>
+</div>
 
-<tr>
-<th>Moneda</th>
-<th>Señal</th>
-<th>Confianza IA</th>
-</tr>
-
-{% for s in signals %}
-
-<tr>
-<td>{{s.symbol}}</td>
-<td>{{s.signal}}</td>
-<td>{{s.confidence}}</td>
-</tr>
-
-{% endfor %}
-
-</table>
+<!-- POSICIONES -->
+<div class="card">
+    <h3>📊 Posiciones</h3>
+    <table id="positions">
+        <tr>
+            <th>Symbol</th>
+            <th>Entry</th>
+            <th>Actual</th>
+            <th>Qty</th>
+            <th>PnL %</th>
+        </tr>
+    </table>
+</div>
 
 </div>
 
 <script>
+let chart;
 
-const data = {{performance.history | tojson }};
+async function update() {
 
-const ctx = document.getElementById('profitChart');
+    const res = await fetch('/api/data');
+    const data = await res.json();
 
-new Chart(ctx, {
+    // ===== STATS =====
+    document.getElementById("balance").innerText = data.balance.toFixed(2);
+    document.getElementById("profit").innerText = data.performance.profit.toFixed(2);
+    document.getElementById("winrate").innerText = data.stats.winrate + "%";
+    document.getElementById("trades").innerText = data.stats.wins + data.stats.losses;
+    document.getElementById("drawdown").innerText = data.performance.drawdown + "%";
+    document.getElementById("daily_profit").innerText = data.performance.daily_profit.toFixed(2);
 
-type: 'line',
+    // ===== MODO =====
+    let modeEl = document.getElementById("mode");
+    modeEl.innerHTML = `
+        <span class="badge ${data.mode === "real" ? "mode-real" : "mode-demo"}">
+            ${data.mode.toUpperCase()}
+        </span>
+    `;
 
-data: {
+    // ===== ALERTAS =====
+    let alertsDiv = document.getElementById("alerts");
+    alertsDiv.innerHTML = "";
 
-labels: data.map((_,i)=>i),
+    if (data.performance.drawdown > 5) {
+        alertsDiv.innerHTML += `<div class="alert alert-warning">⚠ Drawdown alto</div>`;
+    }
 
-datasets: [{
+    if (data.performance.drawdown > 10) {
+        alertsDiv.innerHTML += `<div class="alert alert-danger">⛔ Drawdown crítico</div>`;
+    }
 
-label: 'Balance del Bot',
+    if (data.stats.winrate < 40) {
+        alertsDiv.innerHTML += `<div class="alert alert-warning">⚠ IA bajo rendimiento</div>`;
+    }
 
-data: data
+    // ===== GRAFICO =====
+    if (!chart) {
+        const ctx = document.getElementById('chart').getContext('2d');
 
-}]
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Balance',
+                    data: [],
+                    tension: 0.2
+                }]
+            }
+        });
+    }
 
+    let last = data.history[data.history.length - 1];
+    let prev = data.history[data.history.length - 2] || last;
+
+    let color = last >= prev ? "#00ff9c" : "#ff4d4d";
+
+    chart.data.labels = data.history.map((_, i) => i);
+    chart.data.datasets[0].data = data.history;
+    chart.data.datasets[0].borderColor = color;
+    chart.update();
+
+    // ===== POSICIONES =====
+    let table = document.getElementById("positions");
+
+    table.innerHTML = `
+        <tr>
+            <th>Symbol</th>
+            <th>Entry</th>
+            <th>Actual</th>
+            <th>Qty</th>
+            <th>PnL %</th>
+        </tr>
+    `;
+
+    data.positions.forEach(p => {
+
+        let pnl = 0;
+
+        if (p.current_price && p.entry_price) {
+            pnl = ((p.current_price - p.entry_price) / p.entry_price) * 100;
+        }
+
+        let color = pnl >= 0 ? "green" : "red";
+
+        table.innerHTML += `
+            <tr>
+                <td>${p.symbol}</td>
+                <td>${p.entry_price}</td>
+                <td>${p.current_price || "-"}</td>
+                <td>${p.quantity || "-"}</td>
+                <td class="${color}">${pnl.toFixed(2)}%</td>
+            </tr>
+        `;
+    });
 }
 
-});
-
+// refresh
+setInterval(update, 3000);
 </script>
 
 </body>
