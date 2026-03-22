@@ -20,7 +20,7 @@ from config import (
     get_mode
 )
 
-from portfolio import get_balance, update_balance
+from portfolio import get_balance, lock_balance, unlock_balance
 from executor import buy, sell
 
 
@@ -40,10 +40,7 @@ def update_trailing(symbol, price, atr):
 
     max_price = trailing_data[symbol]["max_price"]
 
-    if price < max_price - (atr * 1.5):
-        return True
-
-    return False
+    return price < max_price - (atr * 1.5)
 
 
 def can_trade(symbol):
@@ -92,6 +89,12 @@ def process_symbol(symbol):
         avg_volume = float(df["volume"].mean())
         atr = float(last["atr"])
 
+        trend_change = (
+            ma50 > ma200 and
+            df["ma50"].iloc[-2] < df["ma200"].iloc[-2] and
+            volume > avg_volume
+        )
+
     except Exception as e:
         print(f"❌ Error datos {symbol}:", e)
         return
@@ -119,26 +122,33 @@ def process_symbol(symbol):
 
         print(f"{symbol} | price:{price} rsi:{rsi}")
 
-        # =========================
-        # FILTRO MERCADO (PRO)
-        # =========================
         bearish = ma50 < ma200 and price < ma50
 
         if bearish:
-            print("📉 Mercado bajista, esperando recuperacion")
-            return
-        if ma50 < ma200:
-            if rsi < 30 and volume > avg_volume * 2:
-                print ("Rebote en mercado bajista")
+            if trend_change:
+                print("🔥 Cambio de tendencia en bajista")
+            elif rsi < 30 and volume > avg_volume * 2:
+                print("⚡ Rebote fuerte en bajista")
             else:
+                print("📉 Mercado bajista bloqueado")
                 return
-        
-        #Recuperacion
+
         recovery = (
             price > ma50 and
             rsi > 40 and
             volume > avg_volume
-            )
+        )
+        # =========================
+        # REBOTE BAJISTA (SCALP)
+        # =========================
+        bearish_rebound = (
+           bearish and
+           rsi < 30 and
+           volume > avg_volume * 1.5
+        )
+
+        if bearish_rebound:
+             print("⚡ ENTRADA REBOTE BAJISTA")
 
         # =========================
         # IA
@@ -157,13 +167,12 @@ def process_symbol(symbol):
             return
 
         # =========================
-        # CONDICIONES COMPRA
+        # CONDICIÓN COMPRA
         # =========================
         if (
-            price > ma50 and
-            ma50 > ma200 and
-            rsi < BEST_RSI and
-            volume > avg_volume
+            (recovery and ma50 > ma200 and rsi < BEST_RSI)
+            or trend_change
+            or bearish_rebound
         ):
 
             print(f"🚀 COMPRA: {symbol} {price} | modo: {mode}")
@@ -171,19 +180,7 @@ def process_symbol(symbol):
             try:
                 balance = get_balance()
 
-                if balance < 10:
-                    print("⚠ Balance insuficiente")
-                    return
-
-                # =========================
-                # WINRATE PROTECTION
-                # =========================
-                winrate = get_winrate()
-
-                if winrate < 0.5 and len(positions) > 5:
-                    print("⚠ IA con bajo rendimiento, filtrando trades")
-                    return
-
+                # riesgo
                 risk_amount = balance * RISK_PER_TRADE
 
                 stop_loss_price = price * (1 + BEST_SL)
@@ -198,23 +195,32 @@ def process_symbol(symbol):
                 if quantity <= 0:
                     return
 
+                # capital real usado
+                capital = quantity * price
+
+                if not lock_balance(capital):
+                    print("❌ No hay balance disponible")
+                    return
+
                 if not check_limits(balance):
                     print("⛔ Riesgo bloqueado")
                     return
 
-                # =========================
-                # ABRIR POSICIÓN
-                # =========================
-                add_position(symbol, price, quantity)
+                winrate = get_winrate()
+                if winrate < 0.5 and len(positions) > 5:
+                    print("⚠ IA bajo rendimiento")
+                    return
 
-                # guardar trade IA
+                # guardar posición con capital
+                add_position(symbol, price, quantity, capital=capital)
+
                 register_trade({
                     "symbol": symbol,
                     "rsi": rsi,
                     "volume": vol_ratio,
                     "trend": int(price > ma50),
                     "momentum": price - ma50,
-                    "result": 0
+                    "result": ""
                 })
 
                 if mode == "real":
@@ -236,19 +242,17 @@ def process_symbol(symbol):
 
             entry = float(pos["entry_price"])
             quantity = float(pos["quantity"])
+            capital = float(pos.get("capital", entry * quantity))
 
-            profit_pct = (price - entry) / entry
             pnl = (price - entry) * quantity
+            profit_pct = (price - entry) / entry
 
-            # =========================
-            # TRAILING
-            # =========================
             if update_trailing(symbol, price, atr):
 
                 print(f"📉 TRAILING STOP: {symbol}")
 
                 close_position(symbol, price)
-                update_balance(pnl)
+                unlock_balance(capital, pnl)
 
                 result = 1 if pnl > 0 else 0
                 update_trade_result(symbol, result)
@@ -259,15 +263,12 @@ def process_symbol(symbol):
                 trailing_data.pop(symbol, None)
                 return
 
-            # =========================
-            # TP / SL
-            # =========================
             if profit_pct >= BEST_TP or profit_pct <= BEST_SL:
 
                 print(f"💰 CIERRE: {symbol} Profit: {profit_pct:.4f}")
 
                 close_position(symbol, price)
-                update_balance(pnl)
+                unlock_balance(capital, pnl)
 
                 result = 1 if pnl > 0 else 0
                 update_trade_result(symbol, result)
@@ -286,7 +287,7 @@ def process_symbol(symbol):
 # =========================
 def run_cycle():
 
-    auto_train()  # 🔥 IA se entrena sola
+    auto_train()
 
     print("🔎 Escaneando mercado...")
 
