@@ -121,18 +121,15 @@ def process_symbol(symbol):
             return
 
         print(f"{symbol} | price:{price} rsi:{rsi}")
-
+         
+         #=====================
+         # CCONTEXTO DE MERCADO
+         #=====================
         bearish = ma50 < ma200 and price < ma50
 
         if bearish:
-            if trend_change:
-                print("🔥 Cambio de tendencia en bajista")
-            elif rsi < 30 and volume > avg_volume * 2:
-                print("⚡ Rebote fuerte en bajista")
-            else:
-                print("📉 Mercado bajista bloqueado")
-                return
-
+                print("📉 Mercado bajista detectado")
+                
         recovery = (
             price > ma50 and
             rsi > 40 and
