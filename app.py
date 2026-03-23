@@ -13,26 +13,31 @@ from config import (
 
 from position_manager import get_open_positions
 from performance import get_performance
+from portfolio import (
+    get_balance,
+    get_free_balance,
+    get_used_balance,
+    get_equity
+)
+from indicators import get_indicators
 
 app = Flask(__name__)
-
-app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 
 # =========================
 # TRADES
 # =========================
 def get_trades():
-
     trades = []
 
     try:
-        with open("trades_dataset.csv", "r") as f:
+        with open("trades_dataset.csv", "r", newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 trades.append(row)
-    except:
-        pass
+    except Exception as e:
+        print(f"⚠ Error leyendo trades: {e}")
 
     return trades[-20:]
 
@@ -41,24 +46,31 @@ def get_trades():
 # STATS
 # =========================
 def get_stats():
-
     wins = 0
     losses = 0
 
     try:
-        with open("trades_dataset.csv") as f:
-
+        with open("trades_dataset.csv", "r", newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
 
             for row in reader:
-                if row["result"] != "":
-                    if int(row["result"]) == 1:
-                        wins += 1
-                    else:
-                        losses += 1
+                raw = row.get("result", "")
 
-    except:
-        pass
+                if raw == "":
+                    continue
+
+                try:
+                    result = int(float(raw))
+                except:
+                    continue
+
+                if result == 1:
+                    wins += 1
+                else:
+                    losses += 1
+
+    except Exception as e:
+        print(f"⚠ Error leyendo stats: {e}")
 
     total = wins + losses
     winrate = (wins / total * 100) if total > 0 else 0
@@ -66,8 +78,52 @@ def get_stats():
     return {
         "wins": wins,
         "losses": losses,
-        "winrate": round(winrate, 2)
+        "winrate": round(winrate, 2),
+        "total": total
     }
+
+
+# =========================
+# POSICIONES EN VIVO
+# =========================
+def get_live_positions():
+    positions = get_open_positions()
+    live_positions = []
+
+    for pos in positions:
+        enriched = dict(pos)
+
+        try:
+            symbol = pos["symbol"]
+            df = get_indicators(symbol)
+
+            if df is not None and len(df) > 0:
+                last = df.iloc[-1]
+                current_price = float(last["close"])
+                enriched["current_price"] = current_price
+
+                entry = float(pos.get("entry_price", 0))
+                qty = float(pos.get("quantity", 0))
+
+                if entry > 0 and qty > 0:
+                    pnl = (current_price - entry) * qty
+                    pnl_pct = ((current_price - entry) / entry) * 100
+                else:
+                    pnl = 0
+                    pnl_pct = 0
+
+                enriched["pnl"] = round(pnl, 4)
+                enriched["pnl_pct"] = round(pnl_pct, 2)
+
+        except Exception as e:
+            print(f"⚠ Error actualizando posición {pos.get('symbol')}: {e}")
+            enriched["current_price"] = None
+            enriched["pnl"] = 0
+            enriched["pnl_pct"] = 0
+
+        live_positions.append(enriched)
+
+    return live_positions
 
 
 # =========================
@@ -75,17 +131,24 @@ def get_stats():
 # =========================
 @app.route("/")
 def dashboard():
-
     performance = get_performance()
+
+    portfolio_data = {
+        "balance": get_balance(),
+        "free_balance": get_free_balance(),
+        "used_balance": get_used_balance(),
+        "equity": get_equity()
+    }
 
     return render_template(
         "dashboard.html",
-        positions=get_open_positions(),
+        positions=get_live_positions(),
         trades=get_trades(),
         running=is_running(),
         mode=get_mode(),
         strategy=get_strategy_name(),
         performance=performance,
+        portfolio=portfolio_data,
         stats=get_stats()
     )
 
@@ -95,15 +158,21 @@ def dashboard():
 # =========================
 @app.route("/api/data")
 def api_data():
-
     performance = get_performance()
 
     return jsonify({
-        "positions": get_open_positions(),
-        "balance": performance["balance"],
+        "positions": get_live_positions(),
+        "trades": get_trades(),
+
+        "balance": get_balance(),
+        "free_balance": get_free_balance(),
+        "used_balance": get_used_balance(),
+        "equity": get_equity(),
+
         "performance": performance,
-        "history": performance["history"],
+        "history": performance.get("history", []),
         "stats": get_stats(),
+
         "mode": get_mode(),
         "running": is_running(),
         "strategy": get_strategy_name(),
@@ -139,7 +208,7 @@ def real():
 
 
 # =========================
-# ESTRATEGIAS (🔥 NUEVO)
+# ESTRATEGIAS
 # =========================
 @app.route("/strategy/trend")
 def strat_trend():
