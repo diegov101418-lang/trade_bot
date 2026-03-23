@@ -1,27 +1,26 @@
 [
     {
-        "symbol": "PAXUSDT",
-        "entry_price": 0.9996,
-        "quantity": 1
+        "symbol": "OMUSDT",
+        "entry_price": 0.0669,
+        "quantity": 2989.536622,
+        "capital": 200.0
     },
     {
-        "symbol": "BCHSVUSDT",
-        "entry_price": 58.9,
-        "quantity": 1
+        "symbol": "CHESSUSDT",
+        "entry_price": 0.00281,
+        "quantity": 71174.377224,
+        "capital": 199.99999999943998
     },
     {
-        "symbol": "WAVESUSDT",
-        "entry_price": 1.076,
-        "quantity": 1
+        "symbol": "FFUSDT",
+        "entry_price": 0.07179,
+        "quantity": 2785.903329,
+        "capital": 199.99999998891002
     },
     {
-        "symbol": "WAVESUSDT",
-        "entry_price": 1.076,
-        "quantity": 1
-    },
-    {
-        "symbol": "BCHSVUSDT",
-        "entry_price": 58.9,
-        "quantity": 1
+        "symbol": "ALGOUSDT",
+        "entry_price": 0.0868,
+        "quantity": 2297.600559,
+        "capital": 199.431728492492
     }
 ]
