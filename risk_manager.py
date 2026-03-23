@@ -1,7 +1,15 @@
-from config import RISK_PER_TRADE
 import csv
 import os
 import time
+
+from config import (
+    RISK_PER_TRADE,
+    MAX_DRAWDOWN,
+    MAX_DAILY_LOSS,
+    MAX_TRADES_PER_DAY,
+)
+
+TRADES_FILE = "trades_dataset.csv"
 
 # =========================
 # CONTROL DIARIO
@@ -12,96 +20,167 @@ peak_balance = 0
 daily_start_balance = 0
 
 
-def reset_daily():
+def reset_daily(balance=0):
     global daily_trades, last_day, daily_start_balance
     daily_trades = 0
     last_day = time.strftime("%Y-%m-%d")
-    daily_start_balance = 0
+    daily_start_balance = balance
 
 
 # =========================
-# LIMITES
+# POSITION SIZING
+# =========================
+def calculate_position_size(balance, risk_per_trade, entry, stop, max_capital_pct=0.2):
+    risk_amount = balance * risk_per_trade
+    risk_per_unit = abs(entry - stop)
+
+    if risk_per_unit <= 0:
+        return 0
+
+    qty = risk_amount / risk_per_unit
+
+    # limitar capital máximo usado por trade
+    max_capital = balance * max_capital_pct
+    capital_used = qty * entry
+
+    if capital_used > max_capital:
+        qty = max_capital / entry
+
+    if qty <= 0:
+        return 0
+
+    return round(qty, 6)
+
+
+# =========================
+# LIMITES GLOBALES
 # =========================
 def check_limits(balance):
-
-    global daily_trades, last_day, peak_balance
+    global daily_trades, last_day, peak_balance, daily_start_balance
 
     today = time.strftime("%Y-%m-%d")
 
     if last_day != today:
-        reset_daily()
+        reset_daily(balance)
 
-    # max trades diario
-    if daily_trades >= 10:
+    # max trades diarios
+    if daily_trades >= MAX_TRADES_PER_DAY:
         print("⛔ Max trades diarios alcanzado")
         return False
 
-    # drawdown
-    if peak_balance == 0:
+    # peak balance histórico
+    if peak_balance == 0 or balance > peak_balance:
         peak_balance = balance
 
-    drawdown = (balance - peak_balance) / peak_balance
+    # drawdown máximo
+    if peak_balance > 0:
+        drawdown = (balance - peak_balance) / peak_balance
+        if drawdown <= -MAX_DRAWDOWN:
+            print(f"⛔ Max drawdown alcanzado: {drawdown:.2%}")
+            return False
 
-    if drawdown < -0.3:
-        print("⛔ Max drawdown alcanzado")
-        return False
+    # pérdida diaria máxima
+    if daily_start_balance > 0:
+        daily_loss = (balance - daily_start_balance) / daily_start_balance
+        if daily_loss <= -MAX_DAILY_LOSS:
+            print(f"⛔ Max pérdida diaria alcanzada: {daily_loss:.2%}")
+            return False
 
     return True
 
 
+# =========================
+# REGISTRAR TRADE
+# =========================
 def register_trade(data=None):
     global daily_trades
     daily_trades += 1
 
-    # guardar dataset IA
-    if data:
-        file_exists = os.path.isfile("trades_dataset.csv")
+    if not data:
+        return
 
-        with open("trades_dataset.csv", "a", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=data.keys())
+    file_exists = os.path.isfile(TRADES_FILE)
 
-            if not file_exists:
-                writer.writeheader()
+    with open(TRADES_FILE, "a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=data.keys())
 
-            writer.writerow(data)
+        if not file_exists:
+            writer.writeheader()
+
+        writer.writerow(data)
 
 
 # =========================
-# WINRATE IA
+# WINRATE
 # =========================
 def get_winrate():
-
     wins = 0
     total = 0
 
+    if not os.path.exists(TRADES_FILE):
+        return 0
+
     try:
-        with open("trades_dataset.csv") as f:
+        with open(TRADES_FILE, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
+
             for row in reader:
-                if row["result"] != "":
-                    total += 1
-                    if int(row["result"]) == 1:
-                        wins += 1
-    except:
+                raw = row.get("result", "")
+
+                if raw == "":
+                    continue
+
+                try:
+                    result = int(float(raw))
+                except:
+                    continue
+
+                total += 1
+
+                if result == 1:
+                    wins += 1
+
+    except Exception as e:
+        print(f"⚠ Error leyendo winrate: {e}")
         return 0
 
     return wins / total if total > 0 else 0
 
 
+# =========================
+# ACTUALIZAR RESULTADO DE TRADE
+# =========================
 def update_trade_result(symbol, result):
-
-    try:
-        with open("trades_dataset.csv", "r") as f:
-            reader = list(csv.DictReader(f))
-    except:
+    if not os.path.exists(TRADES_FILE):
         return
 
-    for row in reversed(reader):
-        if row["symbol"] == symbol and row["result"] == "0":
+    try:
+        with open(TRADES_FILE, "r", newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+    except Exception as e:
+        print(f"⚠ Error leyendo trades para update: {e}")
+        return
+
+    if not rows:
+        return
+
+    updated = False
+
+    # buscar la última operación abierta de ese símbolo
+    for row in reversed(rows):
+        if row.get("symbol") == symbol and row.get("result", "") == "":
             row["result"] = str(result)
+            updated = True
             break
 
-    with open("trades_dataset.csv", "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=reader[0].keys())
-        writer.writeheader()
-        writer.writerows(reader)
+    if not updated:
+        print(f"⚠ No se encontró trade abierto para {symbol}")
+        return
+
+    try:
+        with open(TRADES_FILE, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=rows[0].keys())
+            writer.writeheader()
+            writer.writerows(rows)
+    except Exception as e:
+        print(f"⚠ Error guardando trades actualizados: {e}")
