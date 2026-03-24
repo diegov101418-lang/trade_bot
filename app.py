@@ -78,8 +78,8 @@ def get_stats():
     return {
         "wins": wins,
         "losses": losses,
-        "winrate": round(winrate, 2),
-        "total": total
+        "total": total,
+        "winrate": round(winrate, 2)
     }
 
 
