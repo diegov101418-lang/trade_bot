@@ -144,11 +144,6 @@
         font-weight: bold;
     }
 
-    .yellow {
-        color: #f59e0b;
-        font-weight: bold;
-    }
-
     .value-green {
         color: #22c55e !important;
     }
@@ -275,12 +270,42 @@
             <h3>Trades</h3>
             <p id="trades">0</p>
         </div>
+
+        <div class="card">
+            <h3>Ganancias</h3>
+            <p id="profit">0.00</p>
+        </div>
+
+        <div class="card">
+            <h3>Pérdidas</h3>
+            <p id="loss">0.00</p>
+        </div>
+
+        <div class="card">
+            <h3>Resultado neto</h3>
+            <p id="net_result">0.00</p>
+        </div>
+
+        <div class="card">
+            <h3>Profit neto</h3>
+            <p id="net_profit">0.00</p>
+        </div>
+
+        <div class="card">
+            <h3>Profit por trade</h3>
+            <p id="avg_profit_per_trade">0.00</p>
+        </div>
+
+        <div class="card">
+            <h3>Max drawdown</h3>
+            <p id="max_drawdown">0.00%</p>
+        </div>
     </div>
 
     <div class="panel">
         <div class="panel-header">
             <h2>📈 Equity Curve</h2>
-            <span class="small">Historial de performance</span>
+            <span class="small" id="equity_info">Historial de performance</span>
         </div>
         <canvas id="equityChart"></canvas>
     </div>
@@ -369,25 +394,82 @@ function updateCards(data) {
     const used = Number(data.used_balance || 0);
     const equity = Number(data.equity || 0);
 
+    const profit = Number(data.performance?.profit || 0);
+    const loss = Number(data.performance?.loss || 0);
+    const netResult = profit + loss;
+    const netProfit = Number(data.performance?.net_profit || 0);
+    const avgProfitTrade = Number(data.performance?.avg_profit_per_trade || 0);
+    const maxDrawdown = Number(data.performance?.max_drawdown || 0);
+
     const balanceEl = document.getElementById("balance");
     const freeEl = document.getElementById("free_balance");
     const usedEl = document.getElementById("used_balance");
     const equityEl = document.getElementById("equity");
+    const profitEl = document.getElementById("profit");
+    const lossEl = document.getElementById("loss");
+    const netEl = document.getElementById("net_result");
+    const netProfitEl = document.getElementById("net_profit");
+    const avgProfitTradeEl = document.getElementById("avg_profit_per_trade");
+    const maxDrawdownEl = document.getElementById("max_drawdown");
 
     balanceEl.innerText = formatNumber(balance);
     freeEl.innerText = formatNumber(free);
     usedEl.innerText = formatNumber(used);
     equityEl.innerText = formatNumber(equity);
 
+    profitEl.innerText = formatNumber(profit);
+    lossEl.innerText = formatNumber(loss);
+    netEl.innerText = formatNumber(netResult);
+    netProfitEl.innerText = formatNumber(netProfit);
+    avgProfitTradeEl.innerText = formatNumber(avgProfitTrade);
+    maxDrawdownEl.innerText = `${formatNumber(maxDrawdown)}%`;
+
+    balanceEl.className = "";
+    freeEl.className = "";
+    usedEl.className = "";
     equityEl.className = "";
+    profitEl.className = "";
+    lossEl.className = "";
+    netEl.className = "";
+    netProfitEl.className = "";
+    avgProfitTradeEl.className = "";
+    maxDrawdownEl.className = "";
+
     if (equity > balance) {
         equityEl.classList.add("value-green");
     } else if (equity < balance) {
         equityEl.classList.add("value-red");
     }
 
+    if (profit > 0) profitEl.classList.add("value-green");
+    if (loss < 0) lossEl.classList.add("value-red");
+
+    if (netResult > 0) {
+        netEl.classList.add("value-green");
+    } else if (netResult < 0) {
+        netEl.classList.add("value-red");
+    }
+
+    if (netProfit > 0) {
+        netProfitEl.classList.add("value-green");
+    } else if (netProfit < 0) {
+        netProfitEl.classList.add("value-red");
+    }
+
+    if (avgProfitTrade > 0) {
+        avgProfitTradeEl.classList.add("value-green");
+    } else if (avgProfitTrade < 0) {
+        avgProfitTradeEl.classList.add("value-red");
+    }
+
+    if (maxDrawdown < 0) {
+        maxDrawdownEl.classList.add("value-red");
+    }
+
     document.getElementById("winrate").innerText = `${data.stats?.winrate ?? 0}%`;
     document.getElementById("trades").innerText = data.stats?.total ?? 0;
+    document.getElementById("equity_info").innerText =
+        `Historial de performance | Max DD: ${formatNumber(maxDrawdown)}%`;
 }
 
 function pnlClass(value) {
