@@ -200,7 +200,6 @@ def process_symbol(symbol):
             "momentum": price - ma50,
         })
 
-        # En esta etapa conviene no bloquear del todo por IA.
         if ai_decision == 0:
             print("⚠ IA no confirma, pero se sigue evaluando")
 
@@ -250,7 +249,6 @@ def process_symbol(symbol):
                 print("❌ Quantity inválida")
                 return
 
-            # limitar capital máximo por operación
             max_capital = balance * 0.2
             capital = min(quantity * price, max_capital)
             quantity = round(capital / price, 6)
@@ -274,7 +272,8 @@ def process_symbol(symbol):
                 "volume": vol_ratio,
                 "trend": int(price > ma50),
                 "momentum": price - ma50,
-                "result": ""
+                "result": "",
+                "pnl": ""
             })
 
             if mode == "real":
@@ -297,7 +296,6 @@ def process_symbol(symbol):
             quantity = float(pos["quantity"])
             capital = float(pos.get("capital", entry * quantity))
 
-            pnl_estimado = (price - entry) * quantity
             profit_pct = (price - entry) / entry
 
             if update_trailing(symbol, price, atr):
@@ -307,7 +305,7 @@ def process_symbol(symbol):
                 unlock_balance(capital, pnl_real)
 
                 result = 1 if pnl_real > 0 else 0
-                update_trade_result(symbol, result)
+                update_trade_result(symbol, result, pnl_real)
 
                 if mode == "real":
                     sell(symbol, quantity)
@@ -322,7 +320,7 @@ def process_symbol(symbol):
                 unlock_balance(capital, pnl_real)
 
                 result = 1 if pnl_real > 0 else 0
-                update_trade_result(symbol, result)
+                update_trade_result(symbol, result, pnl_real)
 
                 if mode == "real":
                     sell(symbol, quantity)
