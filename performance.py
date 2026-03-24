@@ -3,13 +3,11 @@ import os
 from portfolio import get_balance
 
 TRADES_FILE = "trades_dataset.csv"
-
 INITIAL_BALANCE = 1000
 
 
 def get_performance():
-
-    balance = INITIAL_BALANCE
+    real_balance = get_balance()
     history = []
 
     total_profit = 0
@@ -18,58 +16,97 @@ def get_performance():
     losses = 0
     trades_count = 0
 
-    if not os.path.exists(TRADES_FILE):
-        return build_response(balance, history, total_profit, total_loss, wins, losses, trades_count)
+    running_balance = INITIAL_BALANCE
+    peak_balance = INITIAL_BALANCE
+    max_drawdown = 0
 
-    with open(TRADES_FILE, "r") as f:
+    if not os.path.exists(TRADES_FILE):
+        return build_response(
+            real_balance,
+            history,
+            total_profit,
+            total_loss,
+            wins,
+            losses,
+            trades_count,
+            max_drawdown
+        )
+
+    with open(TRADES_FILE, "r", newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
 
         for row in reader:
+            raw_result = row.get("result", "")
+            raw_pnl = row.get("pnl", "")
 
-            raw = row.get("result", "")
-
-            # 🔥 ignorar trades sin cerrar
-            if raw == "":
-                continue
-
-            try:
-                result = float(raw)
-            except:
+            # ignorar trades sin cerrar
+            if raw_result == "":
                 continue
 
             trades_count += 1
 
-            # actualizar balance
-            balance += result
-            history.append(balance)
+            try:
+                result = int(float(raw_result))
+            except:
+                continue
 
-            # stats
-            if result > 0:
-                total_profit += result
+            if result == 1:
                 wins += 1
-            elif result < 0:
-                total_loss += result
+            else:
                 losses += 1
 
-    return build_response(balance, history, total_profit, total_loss, wins, losses, trades_count)
+            pnl_value = 0
+            if raw_pnl != "":
+                try:
+                    pnl_value = float(raw_pnl)
+                except:
+                    pnl_value = 0
+
+            if pnl_value > 0:
+                total_profit += pnl_value
+            elif pnl_value < 0:
+                total_loss += pnl_value
+
+            running_balance += pnl_value
+            history.append(round(running_balance, 2))
+
+            if running_balance > peak_balance:
+                peak_balance = running_balance
+
+            if peak_balance > 0:
+                dd = ((running_balance - peak_balance) / peak_balance) * 100
+                if dd < max_drawdown:
+                    max_drawdown = dd
+
+    return build_response(
+        real_balance,
+        history,
+        total_profit,
+        total_loss,
+        wins,
+        losses,
+        trades_count,
+        max_drawdown
+    )
 
 
-# =========================
-# RESPONSE BUILDER
-# =========================
-def build_response(balance, history, profit, loss, wins, losses, trades):
-
+def build_response(balance, history, profit, loss, wins, losses, trades, max_drawdown):
     total_trades = wins + losses
-
     winrate = round((wins / total_trades) * 100, 2) if total_trades > 0 else 0
+
+    net_profit = profit + loss
+    avg_profit_per_trade = net_profit / trades if trades > 0 else 0
 
     return {
         "balance": round(balance, 2),
-        "history": history[-100:],  # 🔥 limitar para no laggear el chart
+        "history": history[-100:],
         "profit": round(profit, 2),
         "loss": round(loss, 2),
+        "net_profit": round(net_profit, 2),
+        "avg_profit_per_trade": round(avg_profit_per_trade, 2),
         "wins": wins,
         "losses": losses,
         "winrate": winrate,
-        "trades": trades
+        "trades": trades,
+        "max_drawdown": round(max_drawdown, 2)
     }
