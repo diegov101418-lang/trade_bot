@@ -39,7 +39,6 @@ def calculate_position_size(balance, risk_per_trade, entry, stop, max_capital_pc
 
     qty = risk_amount / risk_per_unit
 
-    # limitar capital máximo usado por trade
     max_capital = balance * max_capital_pct
     capital_used = qty * entry
 
@@ -63,23 +62,19 @@ def check_limits(balance):
     if last_day != today:
         reset_daily(balance)
 
-    # max trades diarios
     if daily_trades >= MAX_TRADES_PER_DAY:
         print("⛔ Max trades diarios alcanzado")
         return False
 
-    # peak balance histórico
     if peak_balance == 0 or balance > peak_balance:
         peak_balance = balance
 
-    # drawdown máximo
     if peak_balance > 0:
         drawdown = (balance - peak_balance) / peak_balance
         if drawdown <= -MAX_DRAWDOWN:
             print(f"⛔ Max drawdown alcanzado: {drawdown:.2%}")
             return False
 
-    # pérdida diaria máxima
     if daily_start_balance > 0:
         daily_loss = (balance - daily_start_balance) / daily_start_balance
         if daily_loss <= -MAX_DAILY_LOSS:
@@ -98,6 +93,13 @@ def register_trade(data=None):
 
     if not data:
         return
+
+    # asegurar campos clave
+    if "result" not in data:
+        data["result"] = ""
+
+    if "pnl" not in data:
+        data["pnl"] = ""
 
     file_exists = os.path.isfile(TRADES_FILE)
 
@@ -150,7 +152,7 @@ def get_winrate():
 # =========================
 # ACTUALIZAR RESULTADO DE TRADE
 # =========================
-def update_trade_result(symbol, result):
+def update_trade_result(symbol, result, pnl=None):
     if not os.path.exists(TRADES_FILE):
         return
 
@@ -166,10 +168,13 @@ def update_trade_result(symbol, result):
 
     updated = False
 
-    # buscar la última operación abierta de ese símbolo
     for row in reversed(rows):
         if row.get("symbol") == symbol and row.get("result", "") == "":
             row["result"] = str(result)
+
+            if pnl is not None:
+                row["pnl"] = str(round(float(pnl), 6))
+
             updated = True
             break
 
@@ -184,3 +189,4 @@ def update_trade_result(symbol, result):
             writer.writerows(rows)
     except Exception as e:
         print(f"⚠ Error guardando trades actualizados: {e}")
+    
