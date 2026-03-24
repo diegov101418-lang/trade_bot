@@ -9,7 +9,10 @@ from config import (
     MAX_TRADES_PER_DAY,
 )
 
-TRADES_FILE = "trades_dataset.csv"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TRADES_FILE = os.path.join(BASE_DIR, "trades_dataset.csv")
+
+FIELDNAMES = ["symbol", "rsi", "volume", "trend", "momentum", "result", "pnl"]
 
 # =========================
 # CONTROL DIARIO
@@ -91,25 +94,41 @@ def register_trade(data=None):
     global daily_trades
     daily_trades += 1
 
+    print("🧪 register_trade llamado")
+
     if not data:
+        print("❌ register_trade sin data")
         return
 
-    # asegurar campos clave
-    if "result" not in data:
-        data["result"] = ""
+    row = {
+        "symbol": data.get("symbol", ""),
+        "rsi": data.get("rsi", ""),
+        "volume": data.get("volume", ""),
+        "trend": data.get("trend", ""),
+        "momentum": data.get("momentum", ""),
+        "result": data.get("result", ""),
+        "pnl": data.get("pnl", ""),
+    }
 
-    if "pnl" not in data:
-        data["pnl"] = ""
+    print("🧪 Guardando trade en:", TRADES_FILE)
+    print("🧪 Row:", row)
 
     file_exists = os.path.isfile(TRADES_FILE)
+    write_header = (not file_exists) or os.path.getsize(TRADES_FILE) == 0
 
-    with open(TRADES_FILE, "a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=data.keys())
+    try:
+        with open(TRADES_FILE, "a", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
 
-        if not file_exists:
-            writer.writeheader()
+            if write_header:
+                writer.writeheader()
 
-        writer.writerow(data)
+            writer.writerow(row)
+
+        print(f"✅ Trade registrado: {row['symbol']}")
+
+    except Exception as e:
+        print(f"❌ Error registrando trade: {e}")
 
 
 # =========================
@@ -154,6 +173,7 @@ def get_winrate():
 # =========================
 def update_trade_result(symbol, result, pnl=None):
     if not os.path.exists(TRADES_FILE):
+        print("⚠ No existe trades_dataset.csv")
         return
 
     try:
@@ -164,6 +184,7 @@ def update_trade_result(symbol, result, pnl=None):
         return
 
     if not rows:
+        print("⚠ CSV vacío al actualizar trade")
         return
 
     updated = False
@@ -176,6 +197,7 @@ def update_trade_result(symbol, result, pnl=None):
                 row["pnl"] = str(round(float(pnl), 6))
 
             updated = True
+            print(f"✅ Trade cerrado actualizado: {symbol} | result={result} | pnl={pnl}")
             break
 
     if not updated:
@@ -184,9 +206,8 @@ def update_trade_result(symbol, result, pnl=None):
 
     try:
         with open(TRADES_FILE, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=rows[0].keys())
+            writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
             writer.writeheader()
             writer.writerows(rows)
     except Exception as e:
         print(f"⚠ Error guardando trades actualizados: {e}")
-    
