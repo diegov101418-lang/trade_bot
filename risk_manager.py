@@ -29,7 +29,11 @@ FIELDNAMES = [
     "hour",
     "day_of_week",
     "signal_confidence",
-    "market_regime"
+    "market_regime",
+    "strategy_name",
+    "risk_mode",
+    "atr",
+    "volatility_context"
 ]
 
 # =========================
@@ -67,8 +71,6 @@ def register_trade(data=None):
         print("❌ register_trade sin data")
         return
 
-    ts = data.get("timestamp", int(time.time()))
-
     row = {
         "symbol": data.get("symbol", ""),
         "rsi": data.get("rsi", ""),
@@ -77,11 +79,15 @@ def register_trade(data=None):
         "momentum": data.get("momentum", ""),
         "result": data.get("result", ""),
         "pnl": data.get("pnl", ""),
-        "timestamp": ts,
+        "timestamp": data.get("timestamp", int(time.time())),
         "hour": data.get("hour", ""),
         "day_of_week": data.get("day_of_week", ""),
         "signal_confidence": data.get("signal_confidence", ""),
         "market_regime": data.get("market_regime", ""),
+        "strategy_name": data.get("strategy_name", ""),
+        "risk_mode": data.get("risk_mode", ""),
+        "atr": data.get("atr", ""),
+        "volatility_context": data.get("volatility_context", ""),
     }
 
     file_exists = os.path.isfile(TRADES_FILE)
