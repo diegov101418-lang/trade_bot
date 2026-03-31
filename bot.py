@@ -126,6 +126,15 @@ def process_symbol(symbol):
     else:
         market_regime = "sideways"
 
+    atr_pct = (atr / price) * 100 if price > 0 else 0
+
+    if atr_pct < 1.0:
+        volatility_context = "low"
+    elif atr_pct < 2.5:
+        volatility_context = "medium"
+    else:
+        volatility_context = "high"
+
     recovery = (
         price > ma50 and
         rsi > 40 and
@@ -206,6 +215,7 @@ def process_symbol(symbol):
         }
 
         signals = evaluate_strategies(data)
+        
 
         if not signals:
             print("❌ Sin señales")
@@ -214,6 +224,11 @@ def process_symbol(symbol):
         best_signal = max(signals, key=lambda x: x["confidence"])
         print(f"📊 Señal: {best_signal}")
         signal_confidence = float(best_signal.get("confidence", 0))
+
+        signal_confidence = float(best_signal.get("confidence", 0))
+        strategy_name = str(best_signal.get("strategy", get_strategy_name() 
+         if 'get_strategy_name' in globals() else "unknown"))
+
 
         # Filtro de calidad más estricto
         if best_signal["confidence"] < 0.70:
@@ -234,6 +249,13 @@ def process_symbol(symbol):
         # CONDICIÓN FINAL DE COMPRA
         # =========================
         should_buy = False
+
+        risk_mode = "normal"
+
+        if signal_confidence >= 0.80 and market_regime == "bull":
+            risk_mode = "aggressive"
+        elif signal_confidence < 0.65 or market_regime == "sideways":
+            risk_mode = "conservative"
 
         if best_signal["type"] == "BUY" and best_signal["confidence"] >= 0.70:
             should_buy = True
@@ -295,7 +317,8 @@ def process_symbol(symbol):
 
             add_position(symbol, price, quantity, capital=capital, stop_loss=stop_loss_price)
 
-            now_dt = datetime.fromtimestamp(time.time())
+            now_ts = int(time.time())
+            now_dt = datetime.fromtimestamp(now_ts)
 
             register_trade({
                 "symbol": symbol,
@@ -305,11 +328,15 @@ def process_symbol(symbol):
                 "momentum": price - ma50,
                 "result": "",
                 "pnl": "",
-                "timestamp": int(time.time()),
+                "timestamp": now_ts,
                 "hour": now_dt.hour,
                 "day_of_week": now_dt.weekday(),   # 0=lunes, 6=domingo
                 "signal_confidence": signal_confidence,
-                "market_regime": market_regime
+                "market_regime": market_regime,
+                "strategy_name": strategy_name,
+                "risk_mode": risk_mode,
+                "atr": atr,
+                "volatility_context": volatility_context,
             })
 
             if mode == "real":
