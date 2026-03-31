@@ -1,5 +1,5 @@
 import time
-
+from datetime import datetime
 from risk_manager import (
     check_limits,
     register_trade,
@@ -17,6 +17,7 @@ from position_manager import (
     close_position,
     get_open_positions,
 )
+from symbol_filter import symbol_is_blocked, get_symbol_stats
 
 from config import (
     is_running,
@@ -26,7 +27,7 @@ from config import (
     get_mode,
 )
 
-from portfolio import get_balance, lock_balance, unlock_balance
+from portfolio import get_balance, get_free_balance, lock_balance, unlock_balance
 from executor import buy, sell
 
 
@@ -68,7 +69,7 @@ def get_strategy():
     if best:
         return best["rsi"], best["tp"], best["sl"]
 
-    return 35, 0.04, -0.02
+    return 35, 0.05, -0.02
 
 
 # =========================
@@ -118,6 +119,13 @@ def process_symbol(symbol):
     # =========================
     bearish = ma50 < ma200 and price < ma50
 
+    if ma50 > ma200 and price > ma50:
+        market_regime = "bull"
+    elif ma50 < ma200 and price < ma50:
+        market_regime = "bear"
+    else:
+        market_regime = "sideways"
+
     recovery = (
         price > ma50 and
         rsi > 40 and
@@ -150,12 +158,25 @@ def process_symbol(symbol):
             print("⛔ Máximo de posiciones alcanzado")
             return
 
-        if avg_volume < 50000:
+        if avg_volume < 150000:
             print(f"⛔ Volumen promedio bajo: {avg_volume}")
             return
 
         if not can_trade(symbol):
             print(f"⏳ Cooldown activo para {symbol}")
+            return
+
+        # =========================
+        # FILTRO AUTOMÁTICO DE SÍMBOLOS
+        # =========================
+        if symbol_is_blocked(symbol):
+            stats = get_symbol_stats(symbol)
+            print(
+                f"⛔ Símbolo bloqueado: {symbol} | "
+                f"trades={stats['trades']} "
+                f"winrate={stats['winrate']:.2%} "
+                f"net={stats['net_pnl']}"
+            )
             return
 
         print(f"{symbol} | price:{price} rsi:{rsi}")
@@ -192,6 +213,12 @@ def process_symbol(symbol):
 
         best_signal = max(signals, key=lambda x: x["confidence"])
         print(f"📊 Señal: {best_signal}")
+        signal_confidence = float(best_signal.get("confidence", 0))
+
+        # Filtro de calidad más estricto
+        if best_signal["confidence"] < 0.70:
+            print(f"⛔ Señal débil: {best_signal}")
+            return
 
         ai_decision = predict_trade({
             "rsi": rsi,
@@ -208,7 +235,7 @@ def process_symbol(symbol):
         # =========================
         should_buy = False
 
-        if best_signal["type"] == "BUY":
+        if best_signal["type"] == "BUY" and best_signal["confidence"] >= 0.70:
             should_buy = True
 
         if recovery or trend_change or bearish_rebound:
@@ -221,25 +248,26 @@ def process_symbol(symbol):
         print(f"🚀 COMPRA: {symbol} {price} | modo: {mode}")
 
         try:
-            balance = get_balance()
+            balance_total = get_balance()
+            balance_free = get_free_balance()
 
-            if balance <= 0:
-                print("❌ Balance inválido")
+            if balance_free <= 0:
+                print("❌ Balance libre inválido")
                 return
 
-            if not check_limits(balance):
+            if not check_limits(balance_total):
                 print("⛔ Riesgo bloqueado")
                 return
 
             winrate = get_winrate()
-            if winrate < 0.5 and len(positions) > 3:
+            if winrate < 0.40 and len(positions) > 2:
                 print("⚠ IA bajo rendimiento")
                 return
 
             stop_loss_price = price * (1 + BEST_SL)
 
             quantity = calculate_position_size(
-                balance=balance,
+                balance=balance_free,
                 risk_per_trade=RISK_PER_TRADE,
                 entry=price,
                 stop=stop_loss_price,
@@ -249,7 +277,7 @@ def process_symbol(symbol):
                 print("❌ Quantity inválida")
                 return
 
-            max_capital = balance * 0.2
+            max_capital = balance_free * 0.2
             capital = min(quantity * price, max_capital)
             quantity = round(capital / price, 6)
 
@@ -257,14 +285,17 @@ def process_symbol(symbol):
                 print("❌ Capital o quantity inválidos")
                 return
 
-            print(f"💰 balance total: {balance}")
+            print(f"💰 balance total: {balance_total}")
+            print(f"💵 balance libre: {balance_free}")
             print(f"🔒 intentando usar: {capital}")
 
             if not lock_balance(capital):
                 print("❌ No hay balance disponible")
                 return
 
-            add_position(symbol, price, quantity, capital=capital)
+            add_position(symbol, price, quantity, capital=capital, stop_loss=stop_loss_price)
+
+            now_dt = datetime.fromtimestamp(time.time())
 
             register_trade({
                 "symbol": symbol,
@@ -273,7 +304,12 @@ def process_symbol(symbol):
                 "trend": int(price > ma50),
                 "momentum": price - ma50,
                 "result": "",
-                "pnl": ""
+                "pnl": "",
+                "timestamp": int(time.time()),
+                "hour": now_dt.hour,
+                "day_of_week": now_dt.weekday(),   # 0=lunes, 6=domingo
+                "signal_confidence": signal_confidence,
+                "market_regime": market_regime
             })
 
             if mode == "real":
@@ -347,7 +383,7 @@ def run_cycle():
 
     print(f"📊 Oportunidades: {len(opportunities)}")
 
-    for op in opportunities[:5]:
+    for op in opportunities[:3]:
         print("DEBUG OP:", op)
 
         symbol = op.get("symbol") or op.get("pair") or op.get("coin")

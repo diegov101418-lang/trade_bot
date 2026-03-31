@@ -4,221 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trading Bot PRO</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-    * {
-        box-sizing: border-box;
-    }
-
-    body {
-        margin: 0;
-        padding: 20px;
-        background: #0b0f19;
-        color: #e5e7eb;
-        font-family: Arial, sans-serif;
-    }
-
-    h1, h2, h3 {
-        margin-top: 0;
-    }
-
-    h1 {
-        color: #ff4d6d;
-        margin-bottom: 8px;
-    }
-
-    .topbar {
-        margin-bottom: 20px;
-        color: #cbd5e1;
-        display: flex;
-        gap: 18px;
-        flex-wrap: wrap;
-        align-items: center;
-    }
-
-    .status-on {
-        color: #22c55e;
-        font-weight: bold;
-    }
-
-    .status-off {
-        color: #ef4444;
-        font-weight: bold;
-    }
-
-    .strategy-badge,
-    .mode-badge {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 999px;
-        background: #1f2937;
-        color: #f9fafb;
-        font-size: 13px;
-        font-weight: bold;
-    }
-
-    .controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 22px;
-    }
-
-    .controls a {
-        text-decoration: none;
-    }
-
-    .controls button {
-        border: none;
-        border-radius: 10px;
-        padding: 10px 14px;
-        cursor: pointer;
-        background: #1f2937;
-        color: white;
-        font-weight: bold;
-        transition: 0.2s;
-    }
-
-    .controls button:hover {
-        background: #374151;
-    }
-
-    .cards {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 15px;
-        margin-bottom: 20px;
-    }
-
-    .card {
-        background: #111827;
-        border: 1px solid #1f2937;
-        border-radius: 14px;
-        padding: 18px;
-        box-shadow: 0 0 8px rgba(0,0,0,0.35);
-    }
-
-    .card h3 {
-        font-size: 15px;
-        color: #94a3b8;
-        margin-bottom: 10px;
-    }
-
-    .card p {
-        margin: 0;
-        font-size: 28px;
-        font-weight: bold;
-        color: #f8fafc;
-    }
-
-    .panel {
-        background: #111827;
-        border: 1px solid #1f2937;
-        border-radius: 14px;
-        padding: 18px;
-        margin-bottom: 20px;
-        box-shadow: 0 0 8px rgba(0,0,0,0.35);
-    }
-
-    .panel-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .muted {
-        color: #94a3b8;
-    }
-
-    .green {
-        color: #22c55e;
-        font-weight: bold;
-    }
-
-    .red {
-        color: #ef4444;
-        font-weight: bold;
-    }
-
-    .value-green {
-        color: #22c55e !important;
-    }
-
-    .value-red {
-        color: #ef4444 !important;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        overflow: hidden;
-    }
-
-    th, td {
-        padding: 10px;
-        border-bottom: 1px solid #1f2937;
-        text-align: left;
-        font-size: 14px;
-    }
-
-    th {
-        color: #94a3b8;
-        font-weight: bold;
-    }
-
-    tr:hover td {
-        background: rgba(255,255,255,0.02);
-    }
-
-    canvas {
-        max-height: 320px;
-    }
-
-    .small {
-        font-size: 13px;
-        color: #94a3b8;
-    }
-
-    .grid-2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
-
-    .pnl-box {
-        display: inline-block;
-        padding: 4px 8px;
-        border-radius: 8px;
-        font-weight: bold;
-        font-size: 13px;
-    }
-
-    .pnl-pos {
-        background: rgba(34, 197, 94, 0.12);
-        color: #22c55e;
-    }
-
-    .pnl-neg {
-        background: rgba(239, 68, 68, 0.12);
-        color: #ef4444;
-    }
-
-    .pnl-flat {
-        background: rgba(148, 163, 184, 0.12);
-        color: #94a3b8;
-    }
-
-    @media (max-width: 1000px) {
-        .grid-2 {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
 </head>
+
 <body>
 
     <h1>🚀 Trading Bot PRO</h1>
@@ -240,65 +30,150 @@
         <a href="/strategy/scalping"><button>Scalping</button></a>
     </div>
 
-    <div class="cards">
-        <div class="card">
-            <h3>Balance total</h3>
-            <p id="balance">0.00</p>
+    <div class="panel">
+        <div class="panel-header">
+            <h2>🧠 Estado del sistema</h2>
+            <span class="small">Preparado para futura app</span>
         </div>
 
-        <div class="card">
-            <h3>Balance libre</h3>
-            <p id="free_balance">0.00</p>
+        <div class="system-grid">
+            <div class="system-item">
+                <span class="label">Bot</span>
+                <span class="value" id="system_bot_status">-</span>
+            </div>
+
+            <div class="system-item">
+                <span class="label">Modo</span>
+                <span class="value" id="system_mode">-</span>
+            </div>
+
+            <div class="system-item">
+                <span class="label">Estrategia</span>
+                <span class="value" id="system_strategy">-</span>
+            </div>
+
+            <div class="system-item">
+                <span class="label">Versión</span>
+                <span class="value" id="system_version">v2.0</span>
+            </div>
+
+            <div class="system-item">
+                <span class="label">Trades hoy</span>
+                <span class="value" id="system_daily_trades">-</span>
+            </div>
+
+            <div class="system-item">
+                <span class="label">Última actualización</span>
+                <span class="value" id="system_last_update">-</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">
+            <h2>💼 Portfolio</h2>
+            <span class="small">Estado actual de la cuenta</span>
         </div>
 
-        <div class="card">
-            <h3>Balance usado</h3>
-            <p id="used_balance">0.00</p>
+        <div class="cards">
+            <div class="card">
+                <h3>Balance total</h3>
+                <p id="balance">0.00</p>
+            </div>
+
+            <div class="card">
+                <h3>Equity</h3>
+                <p id="equity">0.00</p>
+            </div>
+
+            <div class="card">
+                <h3>PnL flotante</h3>
+                <p id="floating_pnl">0.00</p>
+            </div>
+
+            <div class="card">
+                <h3>Exposición actual</h3>
+                <p id="risk_pct">0.00%</p>
+            </div>
+
+            <div class="card">
+                <h3>Riesgo total abierto</h3>
+                <p id="total_risk">0.00</p>
+            </div>
+
+            <div class="card">
+                <h3>Riesgo promedio/trade</h3>
+                <p id="avg_risk">0.00</p>
+            </div>
+
+            <div class="card">
+                <h3>Riesgo real %</h3>
+                <p id="risk_real_pct">0.00%</p>
+            </div>
+
+            <div class="card">
+                <h3>Balance libre</h3>
+                <p id="free_balance">0.00</p>
+            </div>
+
+            <div class="card">
+                <h3>Balance usado</h3>
+                <p id="used_balance">0.00</p>
+            </div>
+
+            <div class="card">
+                <h3>Posiciones abiertas</h3>
+                <p id="open_positions_count">0</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">
+            <h2>📊 Performance</h2>
+            <span class="small">Métricas de rendimiento del bot</span>
         </div>
 
-        <div class="card">
-            <h3>Equity</h3>
-            <p id="equity">0.00</p>
-        </div>
+        <div class="cards">
+            <div class="card">
+                <h3>Trades</h3>
+                <p id="trades">0</p>
+            </div>
 
-        <div class="card">
-            <h3>Winrate</h3>
-            <p id="winrate">0%</p>
-        </div>
+            <div class="card">
+                <h3>Winrate</h3>
+                <p id="winrate">0%</p>
+            </div>
 
-        <div class="card">
-            <h3>Trades</h3>
-            <p id="trades">0</p>
-        </div>
+            <div class="card">
+                <h3>Ganancias</h3>
+                <p id="profit">0.00</p>
+            </div>
 
-        <div class="card">
-            <h3>Ganancias</h3>
-            <p id="profit">0.00</p>
-        </div>
+            <div class="card">
+                <h3>Pérdidas</h3>
+                <p id="loss">0.00</p>
+            </div>
 
-        <div class="card">
-            <h3>Pérdidas</h3>
-            <p id="loss">0.00</p>
-        </div>
+            <div class="card">
+                <h3>Resultado neto</h3>
+                <p id="net_result">0.00</p>
+            </div>
 
-        <div class="card">
-            <h3>Resultado neto</h3>
-            <p id="net_result">0.00</p>
-        </div>
+            <div class="card">
+                <h3>Profit neto</h3>
+                <p id="net_profit">0.00</p>
+            </div>
 
-        <div class="card">
-            <h3>Profit neto</h3>
-            <p id="net_profit">0.00</p>
-        </div>
+            <div class="card">
+                <h3>Profit por trade</h3>
+                <p id="avg_profit_per_trade">0.00</p>
+            </div>
 
-        <div class="card">
-            <h3>Profit por trade</h3>
-            <p id="avg_profit_per_trade">0.00</p>
-        </div>
-
-        <div class="card">
-            <h3>Max drawdown</h3>
-            <p id="max_drawdown">0.00%</p>
+            <div class="card">
+                <h3>Max drawdown</h3>
+                <p id="max_drawdown">0.00%</p>
+            </div>
         </div>
     </div>
 
@@ -308,6 +183,22 @@
             <span class="small" id="equity_info">Historial de performance</span>
         </div>
         <canvas id="equityChart"></canvas>
+    </div>
+    
+    <div class="panel">
+        <div class="panel-header">
+            <h2>🕒 Rendimiento por hora</h2>
+            <span class="small">Trades y winrate por franja horaria</span>
+        </div>
+        <canvas id="hourChart"></canvas>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">
+            <h2>📅 Rendimiento por día</h2>
+            <span class="small">Winrate y trades por día</span>
+        </div>
+        <canvas id="dayChart"></canvas>
     </div>
 
     <div class="grid-2">
@@ -350,275 +241,28 @@
                         <th>Trend</th>
                         <th>Momentum</th>
                         <th>Result</th>
+                        <th>PnL</th>
                     </tr>
                 </thead>
                 <tbody id="tradesTable">
                     <tr>
-                        <td colspan="6" class="muted">Sin trades</td>
+                        <td colspan="7" class="muted">Sin trades</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-<script>
-let chartInstance = null;
+    <div class="panel">
+        <div class="panel-header">
+            <h2>🚨 Alertas</h2>
+            <span class="small">Eventos y señales del sistema</span>
+        </div>
+        <div id="alertsList" class="alerts-list">
+            <div class="alert-empty">Sin alertas por ahora</div>
+        </div>
+    </div>
 
-function formatNumber(value, decimals = 2) {
-    const num = Number(value || 0);
-    return num.toFixed(decimals);
-}
-
-function updateHeader(data) {
-    document.getElementById("mode").innerText = data.mode || "-";
-    document.getElementById("strategy").innerText = data.strategy || "-";
-
-    const runningEl = document.getElementById("running");
-    if (data.running) {
-        runningEl.innerText = "ON";
-        runningEl.className = "status-on";
-    } else {
-        runningEl.innerText = "OFF";
-        runningEl.className = "status-off";
-    }
-
-    if (data.time) {
-        const date = new Date(data.time * 1000);
-        document.getElementById("api_time").innerText = date.toLocaleTimeString();
-    }
-}
-
-function updateCards(data) {
-    const balance = Number(data.balance || 0);
-    const free = Number(data.free_balance || 0);
-    const used = Number(data.used_balance || 0);
-    const equity = Number(data.equity || 0);
-
-    const profit = Number(data.performance?.profit || 0);
-    const loss = Number(data.performance?.loss || 0);
-    const netResult = profit + loss;
-    const netProfit = Number(data.performance?.net_profit || 0);
-    const avgProfitTrade = Number(data.performance?.avg_profit_per_trade || 0);
-    const maxDrawdown = Number(data.performance?.max_drawdown || 0);
-
-    const balanceEl = document.getElementById("balance");
-    const freeEl = document.getElementById("free_balance");
-    const usedEl = document.getElementById("used_balance");
-    const equityEl = document.getElementById("equity");
-    const profitEl = document.getElementById("profit");
-    const lossEl = document.getElementById("loss");
-    const netEl = document.getElementById("net_result");
-    const netProfitEl = document.getElementById("net_profit");
-    const avgProfitTradeEl = document.getElementById("avg_profit_per_trade");
-    const maxDrawdownEl = document.getElementById("max_drawdown");
-
-    balanceEl.innerText = formatNumber(balance);
-    freeEl.innerText = formatNumber(free);
-    usedEl.innerText = formatNumber(used);
-    equityEl.innerText = formatNumber(equity);
-
-    profitEl.innerText = formatNumber(profit);
-    lossEl.innerText = formatNumber(loss);
-    netEl.innerText = formatNumber(netResult);
-    netProfitEl.innerText = formatNumber(netProfit);
-    avgProfitTradeEl.innerText = formatNumber(avgProfitTrade);
-    maxDrawdownEl.innerText = `${formatNumber(maxDrawdown)}%`;
-
-    balanceEl.className = "";
-    freeEl.className = "";
-    usedEl.className = "";
-    equityEl.className = "";
-    profitEl.className = "";
-    lossEl.className = "";
-    netEl.className = "";
-    netProfitEl.className = "";
-    avgProfitTradeEl.className = "";
-    maxDrawdownEl.className = "";
-
-    if (equity > balance) {
-        equityEl.classList.add("value-green");
-    } else if (equity < balance) {
-        equityEl.classList.add("value-red");
-    }
-
-    if (profit > 0) profitEl.classList.add("value-green");
-    if (loss < 0) lossEl.classList.add("value-red");
-
-    if (netResult > 0) {
-        netEl.classList.add("value-green");
-    } else if (netResult < 0) {
-        netEl.classList.add("value-red");
-    }
-
-    if (netProfit > 0) {
-        netProfitEl.classList.add("value-green");
-    } else if (netProfit < 0) {
-        netProfitEl.classList.add("value-red");
-    }
-
-    if (avgProfitTrade > 0) {
-        avgProfitTradeEl.classList.add("value-green");
-    } else if (avgProfitTrade < 0) {
-        avgProfitTradeEl.classList.add("value-red");
-    }
-
-    if (maxDrawdown < 0) {
-        maxDrawdownEl.classList.add("value-red");
-    }
-
-    document.getElementById("winrate").innerText = `${data.stats?.winrate ?? 0}%`;
-    document.getElementById("trades").innerText = data.stats?.total ?? 0;
-    document.getElementById("equity_info").innerText =
-        `Historial de performance | Max DD: ${formatNumber(maxDrawdown)}%`;
-}
-
-function pnlClass(value) {
-    const v = Number(value || 0);
-    if (v > 0) return "pnl-box pnl-pos";
-    if (v < 0) return "pnl-box pnl-neg";
-    return "pnl-box pnl-flat";
-}
-
-function updatePositions(positions) {
-    const tbody = document.getElementById("positionsTable");
-    const count = document.getElementById("positions_count");
-
-    count.innerText = `${positions.length} posición${positions.length === 1 ? "" : "es"}`;
-
-    if (!positions.length) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="muted">Sin posiciones</td>
-            </tr>
-        `;
-        return;
-    }
-
-    tbody.innerHTML = positions.map(pos => {
-        const entry = Number(pos.entry_price || 0);
-        const current = pos.current_price !== null && pos.current_price !== undefined
-            ? Number(pos.current_price)
-            : 0;
-        const qty = Number(pos.quantity || 0);
-        const capital = Number(pos.capital || 0);
-        const pnl = Number(pos.pnl || 0);
-        const pnlPct = Number(pos.pnl_pct || 0);
-
-        return `
-            <tr>
-                <td>${pos.symbol ?? "-"}</td>
-                <td>${formatNumber(entry, 6)}</td>
-                <td>${current ? formatNumber(current, 6) : "-"}</td>
-                <td>${formatNumber(qty, 6)}</td>
-                <td>${formatNumber(capital, 2)}</td>
-                <td><span class="${pnlClass(pnl)}">${formatNumber(pnl, 4)}</span></td>
-                <td><span class="${pnlClass(pnlPct)}">${formatNumber(pnlPct, 2)}%</span></td>
-            </tr>
-        `;
-    }).join("");
-}
-
-function updateTrades(trades) {
-    const tbody = document.getElementById("tradesTable");
-
-    if (!trades.length) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" class="muted">Sin trades</td>
-            </tr>
-        `;
-        return;
-    }
-
-    tbody.innerHTML = trades.slice().reverse().map(trade => {
-        const resultRaw = trade.result ?? "";
-        let resultText = "-";
-        let resultClass = "muted";
-
-        if (resultRaw === "1" || resultRaw === 1) {
-            resultText = "WIN";
-            resultClass = "green";
-        } else if (resultRaw === "0" || resultRaw === 0) {
-            resultText = "LOSS";
-            resultClass = "red";
-        }
-
-        return `
-            <tr>
-                <td>${trade.symbol ?? "-"}</td>
-                <td>${trade.rsi ?? "-"}</td>
-                <td>${trade.volume ?? "-"}</td>
-                <td>${trade.trend ?? "-"}</td>
-                <td>${trade.momentum ?? "-"}</td>
-                <td class="${resultClass}">${resultText}</td>
-            </tr>
-        `;
-    }).join("");
-}
-
-function updateChart(history) {
-    const ctx = document.getElementById("equityChart").getContext("2d");
-
-    if (chartInstance) {
-        chartInstance.destroy();
-    }
-
-    chartInstance = new Chart(ctx, {
-        type: "line",
-        data: {
-            labels: history.map((_, i) => i + 1),
-            datasets: [{
-                label: "Equity",
-                data: history,
-                borderColor: "#38bdf8",
-                backgroundColor: "rgba(56, 189, 248, 0.12)",
-                tension: 0.25,
-                fill: true,
-                pointRadius: 1.5
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    labels: {
-                        color: "#e5e7eb"
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    ticks: { color: "#94a3b8" },
-                    grid: { color: "#1f2937" }
-                },
-                y: {
-                    ticks: { color: "#94a3b8" },
-                    grid: { color: "#1f2937" }
-                }
-            }
-        }
-    });
-}
-
-async function loadData() {
-    try {
-        const res = await fetch("/api/data");
-        const data = await res.json();
-
-        updateHeader(data);
-        updateCards(data);
-        updatePositions(data.positions || []);
-        updateTrades(data.trades || []);
-        updateChart(data.history || []);
-
-    } catch (err) {
-        console.error("Error cargando dashboard:", err);
-    }
-}
-
-loadData();
-setInterval(loadData, 3000);
-</script>
-
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 </html>

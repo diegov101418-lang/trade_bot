@@ -53,17 +53,23 @@ def register_trade(data=None):
     global daily_trades
     daily_trades += 1
 
-    # guardar dataset IA
-    if data:
-        file_exists = os.path.isfile("trades_dataset.csv")
+    if not data:
+        return
 
-        with open("trades_dataset.csv", "a", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=data.keys())
+    data.setdefault("result", "")
+    data.setdefault("pnl", "")
 
-            if not file_exists:
-                writer.writeheader()
+    data.setdefault("timestamp", time.time())
 
-            writer.writerow(data)
+    file_exists = os.path.isfile(TRADES_FILE)
+
+    with open(TRADES_FILE, "a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=data.keys())
+
+        if not file_exists:
+            writer.writeheader()
+
+        writer.writerow(data)
 
 
 # =========================
@@ -88,7 +94,7 @@ def get_winrate():
     return wins / total if total > 0 else 0
 
 
-def update_trade_result(symbol, result):
+def update_trade_result(symbol, result, pnl_real):
 
     try:
         with open("trades_dataset.csv", "r") as f:

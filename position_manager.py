@@ -35,7 +35,7 @@ def can_open_new_position():
 # =========================
 # ADD POSITION
 # =========================
-def add_position(symbol, price, quantity, capital=0):
+def add_position(symbol, price, quantity, capital=0, stop_loss=None):
 
     positions = load_positions()
 
@@ -43,7 +43,8 @@ def add_position(symbol, price, quantity, capital=0):
         "symbol": symbol,
         "entry_price": price,
         "quantity": quantity,
-        "capital": capital
+        "capital": capital,
+        "stop_loss": stop_loss
     }
 
     positions.append(position)

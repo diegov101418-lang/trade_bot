@@ -51,20 +51,29 @@ def start_dashboard():
 # MONITOR
 # =========================
 def monitor():
-    global bot_process
+    global bot_process, dashboard_process
 
-    restart_count = 0
+    bot_restart_count = 0
+    dashboard_restart_count = 0
 
     while True:
 
         if not bot_process or bot_process.poll() is not None:
             print("⚠ Bot caído. Reiniciando...")
             start_bot()
-            restart_count += 1
+            bot_restart_count += 1
 
-        # 🔥 protección anti loop infinito
-        if restart_count > 10:
-            print("❌ Demasiados reinicios. Revisar bot.")
+        if not dashboard_process or dashboard_process.poll() is not None:
+            print("⚠ Dashboard caído. Reiniciando...")
+            start_dashboard()
+            dashboard_restart_count += 1
+
+        if bot_restart_count > 10:
+            print("❌ Demasiados reinicios del bot. Revisar bot.")
+            break
+
+        if dashboard_restart_count > 10:
+            print("❌ Demasiados reinicios del dashboard. Revisar app.py")
             break
 
         time.sleep(10)
@@ -78,10 +87,10 @@ def stop_all():
 
     print("\n⛔ Cerrando sistema...")
 
-    if bot_process:
+    if bot_process and bot_process.poll() is None:
         bot_process.terminate()
 
-    if dashboard_process:
+    if dashboard_process and dashboard_process.poll() is None:
         dashboard_process.terminate()
 
     sys.exit(0)
@@ -91,7 +100,6 @@ def stop_all():
 # MAIN
 # =========================
 def main():
-
     signal.signal(signal.SIGINT, lambda sig, frame: stop_all())
 
     print("🚀 Trading System PRO")

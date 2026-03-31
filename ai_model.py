@@ -6,6 +6,7 @@ import numpy as np
 import time
 
 MODEL_FILE = "model.pkl"
+DATA_FILE = "trades_dataset.csv"
 LAST_TRAIN = 0
 
 
@@ -13,7 +14,6 @@ LAST_TRAIN = 0
 # AUTO TRAIN
 # =========================
 def auto_train():
-
     global LAST_TRAIN
 
     now = time.time()
@@ -28,12 +28,19 @@ def auto_train():
 # ENTRENAMIENTO IA
 # =========================
 def train_model():
-
-    if not os.path.exists("trades_dataset.csv"):
+    if not os.path.exists(DATA_FILE):
         print("⚠ No hay dataset")
         return None
 
-    df = pd.read_csv("trades_dataset.csv")
+    try:
+        df = pd.read_csv(DATA_FILE)
+    except Exception as e:
+        print(f"⚠ Error leyendo dataset IA: {e}")
+        return None
+
+    if df.empty:
+        print("⚠ Dataset vacío")
+        return None
 
     if len(df) < 30:
         print("⚠ Muy pocos datos para entrenar")
@@ -41,43 +48,43 @@ def train_model():
 
     try:
         # =========================
-        # LIMPIEZA PRO 🔥
+        # LIMPIEZA
         # =========================
         df = df.replace([np.inf, -np.inf], np.nan)
 
+        required_cols = ["rsi", "volume", "trend", "momentum", "result"]
+
+        for col in required_cols:
+            if col not in df.columns:
+                print(f"⚠ Falta columna: {col}")
+                return None
+
         # eliminar filas sin resultado
         df = df[df["result"] != ""]
-        
-        # convertir a numérico seguro
+
+        if df.empty:
+            print("⚠ Dataset sin trades cerrados")
+            return None
+
+        # convertir columnas a numérico
+        df["rsi"] = pd.to_numeric(df["rsi"], errors="coerce")
+        df["volume"] = pd.to_numeric(df["volume"], errors="coerce")
+        df["trend"] = pd.to_numeric(df["trend"], errors="coerce")
+        df["momentum"] = pd.to_numeric(df["momentum"], errors="coerce")
         df["result"] = pd.to_numeric(df["result"], errors="coerce")
 
         # eliminar NaN
-        df = df.dropna()
+        df = df.dropna(subset=["rsi", "volume", "trend", "momentum", "result"])
 
         if len(df) < 30:
             print("⚠ Dataset insuficiente tras limpieza")
             return None
 
-        # =========================
-        # FEATURES
-        # =========================
-        if "ma50" not in df.columns or "price" not in df.columns:
-            print("⚠ Faltan columnas base")
+        # asegurar clases válidas
+        unique_results = sorted(df["result"].unique())
+        if len(unique_results) < 2:
+            print("⚠ Dataset sin suficiente variedad de resultados")
             return None
-
-        if "trend" not in df.columns:
-            df["trend"] = (df["price"] > df["ma50"]).astype(int)
-
-        if "momentum" not in df.columns:
-            df["momentum"] = df["price"] - df["ma50"]
-
-        # asegurar tipos
-        df["rsi"] = pd.to_numeric(df["rsi"], errors="coerce")
-        df["volume"] = pd.to_numeric(df["volume"], errors="coerce")
-        df["trend"] = pd.to_numeric(df["trend"], errors="coerce")
-        df["momentum"] = pd.to_numeric(df["momentum"], errors="coerce")
-
-        df = df.dropna()
 
         # =========================
         # DATASET FINAL
@@ -85,13 +92,15 @@ def train_model():
         X = df[["rsi", "volume", "trend", "momentum"]]
         y = df["result"].astype(int)
 
-        model = RandomForestClassifier(n_estimators=100)
+        model = RandomForestClassifier(
+            n_estimators=100,
+            random_state=42
+        )
         model.fit(X, y)
 
         joblib.dump(model, MODEL_FILE)
 
         print(f"✅ Modelo IA entrenado | samples: {len(df)}")
-
         return model
 
     except Exception as e:
@@ -103,7 +112,6 @@ def train_model():
 # CARGAR MODELO
 # =========================
 def load_model():
-
     if not os.path.exists(MODEL_FILE):
         return train_model()
 
@@ -117,7 +125,6 @@ def load_model():
 # IA PRINCIPAL
 # =========================
 def predict_trade(data):
-
     model = load_model()
 
     # =========================
@@ -126,10 +133,10 @@ def predict_trade(data):
     if model:
         try:
             X = pd.DataFrame([{
-                "rsi": data.get("rsi", 50),
-                "volume": data.get("volume", 1),
+                "rsi": float(data.get("rsi", 50)),
+                "volume": float(data.get("volume", 1)),
                 "trend": int(data.get("trend", 0)),
-                "momentum": data.get("momentum", 0)
+                "momentum": float(data.get("momentum", 0))
             }])
 
             pred = model.predict(X)[0]

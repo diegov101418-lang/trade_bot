@@ -1,26 +1,23 @@
 [
     {
-        "symbol": "OMUSDT",
-        "entry_price": 0.0669,
-        "quantity": 2989.536622,
-        "capital": 200.0
+        "symbol": "USD1USDT",
+        "entry_price": 1.0001,
+        "quantity": 199.980002,
+        "capital": 200.00000000000017,
+        "stop_loss": 0.980098
     },
     {
-        "symbol": "CHESSUSDT",
-        "entry_price": 0.00281,
-        "quantity": 71174.377224,
-        "capital": 199.99999999943998
+        "symbol": "DOGEUSDT",
+        "entry_price": 0.09041,
+        "quantity": 1415.772592,
+        "capital": 128.0000000000001,
+        "stop_loss": 0.08860180000000001
     },
     {
-        "symbol": "FFUSDT",
-        "entry_price": 0.07179,
-        "quantity": 2785.903329,
-        "capital": 199.99999998891002
-    },
-    {
-        "symbol": "ALGOUSDT",
-        "entry_price": 0.0868,
-        "quantity": 2297.600559,
-        "capital": 199.431728492492
+        "symbol": "TRXUSDT",
+        "entry_price": 0.3179,
+        "quantity": 322.113872,
+        "capital": 102.40000000000009,
+        "stop_loss": 0.311542
     }
 ]
