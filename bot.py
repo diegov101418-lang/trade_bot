@@ -1,16 +1,19 @@
 import time
-from datetime import datetime
+import holidays
+from datetime import datetime, timezone
+
 from risk_manager import (
     check_limits,
     register_trade,
     get_winrate,
     update_trade_result,
     calculate_position_size,
+    ensure_trades_file,
 )
 from indicators import get_indicators
 from scanner import scan_market
 from market_ranker import rank_symbols
-from ai_model import predict_trade, auto_train
+from ai_model import predict_trade
 from strategy_manager import evaluate_strategies
 from position_manager import (
     add_position,
@@ -25,10 +28,30 @@ from config import (
     RISK_PER_TRADE,
     MAX_POSITIONS,
     get_mode,
+    get_strategy_name,
 )
 
 from portfolio import get_balance, get_free_balance, lock_balance, unlock_balance
 from executor import buy, sell
+from ai_auto_trainer import maybe_retrain
+from ai_strategy_learner import suggest_context_decision
+
+
+# =========================
+# CALENDARIO / SESIONES
+# =========================
+us_holidays = holidays.US()
+
+
+def get_market_session(hour_utc: int) -> str:
+    if 0 <= hour_utc < 8:
+        return "asia"
+    elif 8 <= hour_utc < 13:
+        return "europe"
+    elif 13 <= hour_utc < 21:
+        return "us"
+    else:
+        return "off"
 
 
 # =========================
@@ -78,20 +101,11 @@ def get_strategy():
 def process_symbol(symbol):
     print(f"Entrando a process_symbol: {symbol}")
 
-    recovery = False
-    trend_change = False
-    bearish_rebound = False
-    bearish = False
-
     try:
         df = get_indicators(symbol)
 
-        if df is None:
-            print(f"❌ {symbol} sin datos")
-            return
-
-        if len(df) < 50:
-            print(f"⚠ {symbol} pocos datos: {len(df)}")
+        if df is None or len(df) < 50:
+            print(f"⚠ {symbol} sin datos suficientes")
             return
 
         last = df.iloc[-1]
@@ -108,102 +122,43 @@ def process_symbol(symbol):
         print(f"❌ Error datos {symbol}: {e}")
         return
 
-    BEST_RSI, BEST_TP, BEST_SL = get_strategy()
+    _, BEST_TP, BEST_SL = get_strategy()
 
     positions = get_open_positions()
     symbols_open = [p["symbol"] for p in positions]
     mode = get_mode()
 
-    # =========================
-    # CONTEXTO MERCADO
-    # =========================
     bearish = ma50 < ma200 and price < ma50
 
     if ma50 > ma200 and price > ma50:
         market_regime = "bull"
-    elif ma50 < ma200 and price < ma50:
+    elif bearish:
         market_regime = "bear"
     else:
         market_regime = "sideways"
 
     atr_pct = (atr / price) * 100 if price > 0 else 0
+    volatility_context = "low" if atr_pct < 1 else "medium" if atr_pct < 2.5 else "high"
 
-    if atr_pct < 1.0:
-        volatility_context = "low"
-    elif atr_pct < 2.5:
-        volatility_context = "medium"
-    else:
-        volatility_context = "high"
+    recovery = price > ma50 and rsi > 40 and volume > avg_volume
+    trend_change = ma50 > ma200 and df["ma50"].iloc[-2] < df["ma200"].iloc[-2]
+    bearish_rebound = bearish and rsi < 45 and volume > avg_volume * 1.2
 
-    recovery = (
-        price > ma50 and
-        rsi > 40 and
-        volume > avg_volume
-    )
-
-    trend_change = (
-        ma50 > ma200 and
-        df["ma50"].iloc[-2] < df["ma200"].iloc[-2] and
-        volume > avg_volume
-    )
-
-    bearish_rebound = (
-        bearish and
-        rsi < 45 and
-        volume > avg_volume * 1.2
-    )
-
-    print("CONDICIONES:")
-    print("recovery:", recovery)
-    print("trend_change:", trend_change)
-    print("bearish_rebound:", bearish_rebound)
-
-    # =========================
-    # BUY
-    # =========================
     if symbol not in symbols_open:
 
         if len(positions) >= MAX_POSITIONS:
-            print("⛔ Máximo de posiciones alcanzado")
             return
 
-        if avg_volume < 150000:
-            print(f"⛔ Volumen promedio bajo: {avg_volume}")
+        if avg_volume < 150000 or not can_trade(symbol):
             return
 
-        if not can_trade(symbol):
-            print(f"⏳ Cooldown activo para {symbol}")
-            return
-
-        # =========================
-        # FILTRO AUTOMÁTICO DE SÍMBOLOS
-        # =========================
         if symbol_is_blocked(symbol):
-            stats = get_symbol_stats(symbol)
-            print(
-                f"⛔ Símbolo bloqueado: {symbol} | "
-                f"trades={stats['trades']} "
-                f"winrate={stats['winrate']:.2%} "
-                f"net={stats['net_pnl']}"
-            )
             return
 
-        print(f"{symbol} | price:{price} rsi:{rsi}")
-
-        if bearish:
-            print("📉 Mercado bajista detectado")
-            print(f"DEBUG {symbol} | rsi:{rsi} vol:{volume:.2f}")
-
-        if bearish and not bearish_rebound and not trend_change:
-            print("📉 Bajista sin entrada válida")
-            return
-
-        # =========================
-        # IA + ESTRATEGIAS
-        # =========================
+        now_dt = datetime.now(timezone.utc)
         vol_ratio = volume / avg_volume if avg_volume > 0 else 1
 
-        data = {
+        signals = evaluate_strategies({
             "price": price,
             "rsi": rsi,
             "ma50": ma50,
@@ -212,113 +167,99 @@ def process_symbol(symbol):
             "avg_volume": avg_volume,
             "momentum": price - ma50,
             "trend": price > ma50,
-        }
-
-        signals = evaluate_strategies(data)
-        
+        })
 
         if not signals:
-            print("❌ Sin señales")
             return
 
         best_signal = max(signals, key=lambda x: x["confidence"])
-        print(f"📊 Señal: {best_signal}")
         signal_confidence = float(best_signal.get("confidence", 0))
+        strategy_name = str(best_signal.get("strategy", get_strategy_name()))
 
-        signal_confidence = float(best_signal.get("confidence", 0))
-        strategy_name = str(best_signal.get("strategy", get_strategy_name() 
-         if 'get_strategy_name' in globals() else "unknown"))
+        # ================= IA CONTEXTO =================
+        ia_context = suggest_context_decision({
+            "rsi": rsi,
+            "volume": vol_ratio,
+            "trend": int(price > ma50),
+            "momentum": price - ma50,
+            "hour": now_dt.hour,
+            "day_of_week": now_dt.weekday(),
+            "signal_confidence": signal_confidence,
+            "market_regime": market_regime,
+            "atr": atr,
+            "volatility_context": volatility_context,
+        })
 
+        ia_risk = ia_context.get("risk_suggestion")
 
-        # Filtro de calidad más estricto
-        if best_signal["confidence"] < 0.70:
-            print(f"⛔ Señal débil: {best_signal}")
-            return
-
+        # ================= IA DECISIÓN =================
         ai_decision = predict_trade({
             "rsi": rsi,
             "volume": vol_ratio,
-            "trend": price > ma50,
+            "trend": int(price > ma50),
             "momentum": price - ma50,
+            "hour": now_dt.hour,
+            "day_of_week": now_dt.weekday(),
+            "signal_confidence": signal_confidence,
+            "market_regime": market_regime,
+            "atr": atr,
+            "volatility_context": volatility_context,
         })
 
-        if ai_decision == 0:
-            print("⚠ IA no confirma, pero se sigue evaluando")
+        if ai_decision == 0 and signal_confidence < 0.80:
+            return
 
-        # =========================
-        # CONDICIÓN FINAL DE COMPRA
-        # =========================
-        should_buy = False
-
+        # ================= RISK MODE =================
         risk_mode = "normal"
 
         if signal_confidence >= 0.80 and market_regime == "bull":
             risk_mode = "aggressive"
-        elif signal_confidence < 0.65 or market_regime == "sideways":
+        elif signal_confidence < 0.65:
             risk_mode = "conservative"
 
-        if best_signal["type"] == "BUY" and best_signal["confidence"] >= 0.70:
-            should_buy = True
+        if ia_risk in ["aggressive", "normal", "conservative"]:
+            risk_mode = ia_risk
 
-        if recovery or trend_change or bearish_rebound:
-            should_buy = True
+        should_buy = (
+            (best_signal["type"] == "BUY" and signal_confidence >= 0.70)
+            or recovery or trend_change or bearish_rebound
+        )
 
         if not should_buy:
-            print("❌ No hay condición final de compra")
             return
 
-        print(f"🚀 COMPRA: {symbol} {price} | modo: {mode}")
-
         try:
-            balance_total = get_balance()
             balance_free = get_free_balance()
-
             if balance_free <= 0:
-                print("❌ Balance libre inválido")
-                return
-
-            if not check_limits(balance_total):
-                print("⛔ Riesgo bloqueado")
-                return
-
-            winrate = get_winrate()
-            if winrate < 0.40 and len(positions) > 2:
-                print("⚠ IA bajo rendimiento")
                 return
 
             stop_loss_price = price * (1 + BEST_SL)
 
+            risk_per_trade_used = RISK_PER_TRADE
+            if risk_mode == "conservative":
+                risk_per_trade_used *= 0.5
+            elif risk_mode == "aggressive":
+                risk_per_trade_used *= 1.25
+
             quantity = calculate_position_size(
                 balance=balance_free,
-                risk_per_trade=RISK_PER_TRADE,
+                risk_per_trade=risk_per_trade_used,
                 entry=price,
                 stop=stop_loss_price,
             )
 
             if quantity <= 0:
-                print("❌ Quantity inválida")
                 return
 
-            max_capital = balance_free * 0.2
-            capital = min(quantity * price, max_capital)
+            capital = min(quantity * price, balance_free * 0.2)
             quantity = round(capital / price, 6)
 
-            if quantity <= 0 or capital <= 0:
-                print("❌ Capital o quantity inválidos")
-                return
-
-            print(f"💰 balance total: {balance_total}")
-            print(f"💵 balance libre: {balance_free}")
-            print(f"🔒 intentando usar: {capital}")
-
             if not lock_balance(capital):
-                print("❌ No hay balance disponible")
                 return
 
-            add_position(symbol, price, quantity, capital=capital, stop_loss=stop_loss_price)
+            add_position(symbol, price, quantity, capital, stop_loss_price)
 
-            now_ts = int(time.time())
-            now_dt = datetime.fromtimestamp(now_ts)
+            now_ts = int(now_dt.timestamp())
 
             register_trade({
                 "symbol": symbol,
@@ -330,13 +271,17 @@ def process_symbol(symbol):
                 "pnl": "",
                 "timestamp": now_ts,
                 "hour": now_dt.hour,
-                "day_of_week": now_dt.weekday(),   # 0=lunes, 6=domingo
+                "day_of_week": now_dt.weekday(),
                 "signal_confidence": signal_confidence,
                 "market_regime": market_regime,
                 "strategy_name": strategy_name,
                 "risk_mode": risk_mode,
                 "atr": atr,
                 "volatility_context": volatility_context,
+                "market_session": get_market_session(now_dt.hour),
+                "is_holiday_us": int(now_dt.date() in us_holidays),
+                "dataset_version": "live_ai_risk_v1",
+                "risk_per_trade_used": risk_per_trade_used,
             })
 
             if mode == "real":
@@ -345,13 +290,9 @@ def process_symbol(symbol):
         except Exception as e:
             print(f"❌ Error al abrir posición: {e}")
 
-    # =========================
-    # SELL
-    # =========================
     else:
         try:
             pos = next((p for p in positions if p["symbol"] == symbol), None)
-
             if not pos:
                 return
 
@@ -361,23 +302,7 @@ def process_symbol(symbol):
 
             profit_pct = (price - entry) / entry
 
-            if update_trailing(symbol, price, atr):
-                print(f"📉 TRAILING STOP: {symbol}")
-
-                pnl_real = close_position(symbol, price)
-                unlock_balance(capital, pnl_real)
-
-                result = 1 if pnl_real > 0 else 0
-                update_trade_result(symbol, result, pnl_real)
-
-                if mode == "real":
-                    sell(symbol, quantity)
-
-                trailing_data.pop(symbol, None)
-                return
-
-            if profit_pct >= BEST_TP or profit_pct <= BEST_SL:
-                print(f"💰 CIERRE: {symbol} Profit: {profit_pct:.4f}")
+            if update_trailing(symbol, price, atr) or profit_pct >= BEST_TP or profit_pct <= BEST_SL:
 
                 pnl_real = close_position(symbol, price)
                 unlock_balance(capital, pnl_real)
@@ -395,42 +320,23 @@ def process_symbol(symbol):
 
 
 # =========================
-# CICLO PRINCIPAL
+# LOOP
 # =========================
 def run_cycle():
-    auto_train()
-
-    print("🔎 Escaneando mercado...")
+    maybe_retrain()
 
     for pos in get_open_positions():
         process_symbol(pos["symbol"])
 
-    symbols = scan_market()
-    opportunities = rank_symbols(symbols)
-
-    print(f"📊 Oportunidades: {len(opportunities)}")
-
-    for op in opportunities[:3]:
-        print("DEBUG OP:", op)
-
-        symbol = op.get("symbol") or op.get("pair") or op.get("coin")
-
-        if not symbol:
-            print("❌ No symbol en:", op)
-            continue
-
-        process_symbol(symbol)
+    for op in rank_symbols(scan_market())[:3]:
+        symbol = op.get("symbol") or op.get("pair")
+        if symbol:
+            process_symbol(symbol)
 
 
-# =========================
-# LOOP BOT
-# =========================
 def start_bot():
-    print("🤖 BOT INICIADO (controlado por dashboard)")
-
     while True:
         if not is_running():
-            print("⏸ Bot en pausa...")
             time.sleep(5)
             continue
 
@@ -442,8 +348,6 @@ def start_bot():
         time.sleep(30)
 
 
-# =========================
-# MAIN
-# =========================
 if __name__ == "__main__":
+    ensure_trades_file()
     start_bot()

@@ -13,7 +13,7 @@ def get_indicators(symbol):
             "limit": 200
         }
 
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(url, params=params, timeout=20)
 
         if response.status_code != 200:
             print(f"Error API {symbol}: {response.status_code}")

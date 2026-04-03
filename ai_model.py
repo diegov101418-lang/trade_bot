@@ -33,7 +33,7 @@ def train_model():
         return None
 
     try:
-        df = pd.read_csv(DATA_FILE)
+        df = pd.read_csv( "build_training_dataset.py")
     except Exception as e:
         print(f"⚠ Error leyendo dataset IA: {e}")
         return None

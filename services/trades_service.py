@@ -5,14 +5,21 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRADES_FILE = os.path.join(BASE_DIR, "trades_dataset.csv")
 
 
+def sanitize_row(row):
+    return {str(k): v for k, v in row.items() if k is not None}
+
+
 def get_trades(limit=20):
     trades = []
 
     try:
-        with open(TRADES_FILE, "r", newline="", encoding="utf-8") as f:
+        with open(TRADES_FILE, "r", newline="", encoding="utf-8", errors="ignore") as f:
             reader = csv.DictReader(f)
+
             for row in reader:
-                trades.append(row)
+                clean_row = sanitize_row(row)
+                trades.append(clean_row)
+
     except Exception as e:
         print(f"⚠ Error leyendo trades: {e}")
 
@@ -24,18 +31,19 @@ def get_stats():
     losses = 0
 
     try:
-        with open(TRADES_FILE, "r", newline="", encoding="utf-8") as f:
+        with open(TRADES_FILE, "r", newline="", encoding="utf-8", errors="ignore") as f:
             reader = csv.DictReader(f)
 
             for row in reader:
-                raw = row.get("result", "")
+                clean_row = sanitize_row(row)
+                raw = clean_row.get("result", "")
 
                 if str(raw).strip() == "":
                     continue
 
                 try:
                     result = int(float(raw))
-                except:
+                except Exception:
                     continue
 
                 if result == 1:

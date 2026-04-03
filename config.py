@@ -19,7 +19,7 @@ bot_thread = None
 # ===============================
 MAX_DRAWDOWN = 0.30
 MAX_DAILY_LOSS = 0.05
-MAX_TRADES_PER_DAY = 30
+MAX_TRADES_PER_DAY = 100
 
 # ===============================
 # RIESGO

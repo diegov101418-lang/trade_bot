@@ -39,13 +39,16 @@ def add_position(symbol, price, quantity, capital=0, stop_loss=None):
 
     positions = load_positions()
 
+    
     position = {
-        "symbol": symbol,
-        "entry_price": price,
-        "quantity": quantity,
-        "capital": capital,
-        "stop_loss": stop_loss
-    }
+    "symbol": symbol,
+    "entry_price": price,
+    "quantity": quantity,
+    "capital": capital,
+    "stop_loss": stop_loss,
+    "max_price": price,
+    "min_price": price,
+}
 
     positions.append(position)
     save_positions(positions)

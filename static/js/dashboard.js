@@ -476,6 +476,7 @@ async function loadData() {
         updateChart(data.history || []);
         updateHourChart(data.hour_analysis || []);
         updateDayChart(data.day_analysis || []);
+        updateSessionChart(data.data.session_analysis || []);
 
     } catch (err) {
         console.error("Error cargando dashboard:", err);
@@ -539,6 +540,100 @@ function updateDayChart(dayAnalysis) {
             plugins: {
                 legend: {
                     labels: { color: "#e5e7eb" }
+                }
+            }
+        }
+    });
+}
+let sessionChartInstance = null;
+
+function updateSessionChart(sessionAnalysis) {
+    const canvas = document.getElementById("sessionChart");
+    if (!canvas || !sessionAnalysis || sessionAnalysis.length === 0) return;
+
+    const ctx = canvas.getContext("2d");
+
+    const labels = sessionAnalysis.map(s => s.session.toUpperCase());
+    const trades = sessionAnalysis.map(s => Number(s.trades || 0));
+    const winrate = sessionAnalysis.map(s => Number(s.winrate || 0));
+    const pnl = sessionAnalysis.map(s => Number(s.net_pnl || 0));
+
+    if (sessionChartInstance) {
+        sessionChartInstance.destroy();
+    }
+
+    sessionChartInstance = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: "Trades",
+                    data: trades,
+                    backgroundColor: "rgba(56, 189, 248, 0.4)",
+                    borderColor: "#38bdf8",
+                    borderWidth: 1
+                },
+                {
+                    label: "Winrate %",
+                    data: winrate,
+                    type: "line",
+                    borderColor: "#22c55e",
+                    tension: 0.25,
+                    yAxisID: "y1"
+                },
+                {
+                    label: "PnL",
+                    data: pnl,
+                    type: "line",
+                    borderColor: "#f59e0b",
+                    tension: 0.25,
+                    yAxisID: "y2"
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: { color: "#e5e7eb" }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: "#94a3b8" },
+                    grid: { color: "#1f2937" }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: "#94a3b8" },
+                    title: {
+                        display: true,
+                        text: "Trades",
+                        color: "#94a3b8"
+                    }
+                },
+                y1: {
+                    position: "right",
+                    min: 0,
+                    max: 100,
+                    ticks: { color: "#22c55e" },
+                    grid: { drawOnChartArea: false },
+                    title: {
+                        display: true,
+                        text: "Winrate %",
+                        color: "#22c55e"
+                    }
+                },
+                y2: {
+                    position: "right",
+                    ticks: { color: "#f59e0b" },
+                    grid: { drawOnChartArea: false },
+                    title: {
+                        display: true,
+                        text: "PnL",
+                        color: "#f59e0b"
+                    }
                 }
             }
         }

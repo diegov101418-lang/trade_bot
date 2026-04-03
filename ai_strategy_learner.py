@@ -44,13 +44,13 @@ def encode_volatility(value):
     return 1
 
 
-def load_dataset(file="trades_dataset.csv"):
+def load_dataset(file="trades_dataset_train.csv"):
     if not os.path.exists(file):
         print("⚠ No hay dataset")
         return None
 
     try:
-        df = pd.read_csv(file, encoding="utf-8")
+        df = pd.read_csv(file, encoding="utf-8", on_bad_lines="skip")
         return df
     except Exception as e:
         print(f"⚠ Error leyendo dataset: {e}")
@@ -58,7 +58,13 @@ def load_dataset(file="trades_dataset.csv"):
 
 
 def prepare_dataset(df):
-    required = FEATURES[:-2] + ["market_regime", "volatility_context", TARGET_STRATEGY, TARGET_RISK, "result"]
+    required = FEATURES[:-2] + [
+        "market_regime",
+        "volatility_context",
+        TARGET_STRATEGY,
+        TARGET_RISK,
+        "result"
+    ]
 
     missing = [c for c in required if c not in df.columns]
     if missing:
@@ -71,7 +77,8 @@ def prepare_dataset(df):
 
     numeric_cols = [
         "rsi", "volume", "trend", "momentum",
-        "hour", "day_of_week", "signal_confidence", "atr", "result"
+        "hour", "day_of_week", "signal_confidence",
+        "atr", "result"
     ]
 
     for col in numeric_cols:
@@ -90,7 +97,7 @@ def prepare_dataset(df):
     return df
 
 
-def train_strategy_models(file="trades_dataset.csv"):
+def train_strategy_models(file="trades_dataset_train.csv"):
     df = load_dataset(file)
     if df is None:
         return None, None
@@ -105,9 +112,11 @@ def train_strategy_models(file="trades_dataset.csv"):
     y_strategy = df[TARGET_STRATEGY].astype(str)
     y_risk = df[TARGET_RISK].astype(str)
 
+    strategy_model = None
+    risk_model = None
+
     if y_strategy.nunique() < 2:
         print("⚠ Aún no hay variedad suficiente en strategy_name")
-        strategy_model = None
     else:
         strategy_model = RandomForestClassifier(
             n_estimators=200,
@@ -121,7 +130,6 @@ def train_strategy_models(file="trades_dataset.csv"):
 
     if y_risk.nunique() < 2:
         print("⚠ Aún no hay variedad suficiente en risk_mode")
-        risk_model = None
     else:
         risk_model = RandomForestClassifier(
             n_estimators=200,
@@ -133,7 +141,7 @@ def train_strategy_models(file="trades_dataset.csv"):
         joblib.dump(risk_model, "risk_selector.pkl")
         print("✅ Risk selector entrenado")
 
-    return strategy_model if 'strategy_model' in locals() else None, risk_model if 'risk_model' in locals() else None
+    return strategy_model, risk_model
 
 
 def suggest_context_decision(data):
