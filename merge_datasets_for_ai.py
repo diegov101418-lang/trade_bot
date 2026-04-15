@@ -24,12 +24,16 @@ COMMON_COLUMNS = [
     "mfe_pct",
     "mae_pct",
     "dataset_version",
+    "result_net",
 ]
 
 DATASETS = [
     ("trades_dataset_v1.csv", "v1"),
     ("trades_dataset_v2.csv", "v2"),
     ("trades_dataset_v3.csv", "v3"),
+    ("trades_dataset_v4.csv", "v4"),
+    ("trades_dataset_v5.csv", "v5"),
+    ("trades_dataset_v6.csv", "v6"),
 ]
 
 OUTPUT_FILE = "trades_dataset_merged.csv"

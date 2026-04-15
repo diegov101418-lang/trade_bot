@@ -1,0 +1,402 @@
+[
+  {
+    "symbol": "RESOLVUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212939.6102505
+  },
+  {
+    "symbol": "HUMAUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212939.0090373
+  },
+  {
+    "symbol": "LISTAUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212938.415386
+  },
+  {
+    "symbol": "TNSRUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212937.8192072
+  },
+  {
+    "symbol": "PIVXUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212937.1972363
+  },
+  {
+    "symbol": "ADXUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212936.5978363
+  },
+  {
+    "symbol": "POLYUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212936.004193
+  },
+  {
+    "symbol": "TVKUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212935.401374
+  },
+  {
+    "symbol": "TOMOUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212934.7820196
+  },
+  {
+    "symbol": "COCOSUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212934.1873262
+  },
+  {
+    "symbol": "XRPUSDT",
+    "decision": "SKIP",
+    "confidence": 0.75,
+    "liquidity": "normal",
+    "reason": "ai_blocked_trade:breakout",
+    "time": 1776212933.5876532
+  },
+  {
+    "symbol": "ZKCUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212932.8559885
+  },
+  {
+    "symbol": "JTOUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212932.2559965
+  },
+  {
+    "symbol": "RDNTUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212931.650538
+  },
+  {
+    "symbol": "GALUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212931.043948
+  },
+  {
+    "symbol": "ARUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212750.3648844
+  },
+  {
+    "symbol": "RIFUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212749.774157
+  },
+  {
+    "symbol": "FILUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212749.1742725
+  },
+  {
+    "symbol": "AAVEUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "normal",
+    "reason": "no_signal",
+    "time": 1776212748.5716355
+  },
+  {
+    "symbol": "DOTUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212747.9600067
+  },
+  {
+    "symbol": "SANDUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212747.35688
+  },
+  {
+    "symbol": "JSTUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212746.754049
+  },
+  {
+    "symbol": "SOLUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "normal",
+    "reason": "no_signal",
+    "time": 1776212746.1490483
+  },
+  {
+    "symbol": "TOMOUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212745.5294814
+  },
+  {
+    "symbol": "COCOSUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212744.917745
+  },
+  {
+    "symbol": "LINKUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "normal",
+    "reason": "no_signal",
+    "time": 1776212744.3121753
+  },
+  {
+    "symbol": "PIXELUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212743.6866314
+  },
+  {
+    "symbol": "RDNTUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212743.0777118
+  },
+  {
+    "symbol": "BELUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212742.4803965
+  },
+  {
+    "symbol": "GALUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212741.8780265
+  },
+  {
+    "symbol": "KITEUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212559.689703
+  },
+  {
+    "symbol": "ZBTUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212559.0667737
+  },
+  {
+    "symbol": "YBUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212558.4740102
+  },
+  {
+    "symbol": "HOLOUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212557.861496
+  },
+  {
+    "symbol": "WLFIUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212557.258957
+  },
+  {
+    "symbol": "A2ZUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212556.6520023
+  },
+  {
+    "symbol": "MUBARAKUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212556.0498376
+  },
+  {
+    "symbol": "NEIROUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212555.3776817
+  },
+  {
+    "symbol": "POLYUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212554.760202
+  },
+  {
+    "symbol": "TVKUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212554.1599698
+  },
+  {
+    "symbol": "RIFUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212553.5621898
+  },
+  {
+    "symbol": "TOMOUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212552.9554327
+  },
+  {
+    "symbol": "COCOSUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212552.349308
+  },
+  {
+    "symbol": "RDNTUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212551.7544253
+  },
+  {
+    "symbol": "GALUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212551.154364
+  },
+  {
+    "symbol": "WIFUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212369.3464956
+  },
+  {
+    "symbol": "ORDIUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212368.74763
+  },
+  {
+    "symbol": "ARKMUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212368.1247165
+  },
+  {
+    "symbol": "ALPINEUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212367.528016
+  },
+  {
+    "symbol": "ADXUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776212366.9319966
+  }
+]

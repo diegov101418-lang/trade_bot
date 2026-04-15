@@ -1,4 +1,6 @@
 from flask import Flask, render_template, jsonify, redirect
+from indicators import get_indicators
+from services.daily_stats_service import load_daily_stats_json, save_daily_stats_json, get_today_stats
 from analysis_reports.session_analysis import analyze_by_session
 from analysis_reports.holiday_analysis import analyze_holidays
 from analysis_reports.hour_analysis import analyze_by_hour
@@ -15,33 +17,62 @@ from config import (
 
 from services.dashboard_service import get_dashboard_data
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static", template_folder="templates")
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 
-def sanitize_for_json(obj):
-    if isinstance(obj, dict):
-        clean = {}
-        for k, v in obj.items():
-            if k is None:
-                continue
-            clean[str(k)] = sanitize_for_json(v)
-        return clean
-    elif isinstance(obj, list):
-        return [sanitize_for_json(x) for x in obj]
-    else:
-        return obj
+# =========================
+# CHART API
+# =========================
+@app.route("/api/chart/<symbol>")
+def api_chart(symbol):
+    df = get_indicators(symbol)
 
+    if df is None or len(df) == 0:
+        return jsonify({"candles": [], "ma50": [], "ma200": []})
 
-def find_none_keys(obj, path="root"):
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            if k is None:
-                print(f"❌ None key en {path}")
-            find_none_keys(v, f"{path}.{k}")
-    elif isinstance(obj, list):
-        for i, item in enumerate(obj):
-            find_none_keys(item, f"{path}[{i}]")
+    candles = []
+    ma50 = []
+    ma200 = []
+
+    for _, row in df.iterrows():
+        try:
+            ts = int(row["timestamp"])
+
+            if ts > 1e12:
+                ts = int(ts / 1000)
+
+            candles.append({
+                "time": ts,
+                "open": float(row["open"]),
+                "high": float(row["high"]),
+                "low": float(row["low"]),
+                "close": float(row["close"]),
+            })
+
+            ma50_value = row.get("ma50")
+            ma200_value = row.get("ma200")
+
+            if ma50_value == ma50_value:  # not NaN
+                ma50.append({
+                    "time": ts,
+                    "value": float(ma50_value),
+                })
+
+            if ma200_value == ma200_value:  # not NaN
+                ma200.append({
+                    "time": ts,
+                    "value": float(ma200_value),
+                })
+
+        except Exception as e:
+            print(f"Error candle: {e}")
+
+    return jsonify({
+        "candles": candles,
+        "ma50": ma50,
+        "ma200": ma200,
+    })
 
 
 # =========================
@@ -58,7 +89,7 @@ def dashboard():
 
 
 # =========================
-# API
+# API DATA
 # =========================
 @app.route("/api/data")
 def api_data():
@@ -88,12 +119,20 @@ def api_data():
         print(f"⚠ Error en analyze_holidays: {e}")
         data["holiday_analysis"] = []
 
-    find_none_keys(data)
-    data = sanitize_for_json(data)
+    return jsonify(data)
+@app.route("/api/stats/daily")
+def api_stats_daily():
+    return jsonify(load_daily_stats_json())
 
+
+@app.route("/api/stats/daily/rebuild")
+def api_stats_daily_rebuild():
+    data = save_daily_stats_json()
     return jsonify(data)
 
-
+@app.route("/api/stats/today")
+def api_stats_today():
+    return jsonify(get_today_stats())
 # =========================
 # CONTROLES
 # =========================
@@ -121,9 +160,6 @@ def real():
     return redirect("/")
 
 
-# =========================
-# ESTRATEGIAS
-# =========================
 @app.route("/strategy/trend")
 def strat_trend():
     set_strategy("trend")
@@ -142,8 +178,5 @@ def strat_auto():
     return redirect("/")
 
 
-# =========================
-# RUN
-# =========================
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=5000, debug=True)

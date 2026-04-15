@@ -41,7 +41,7 @@ def count_closed_trades(csv_file):
         return 0
 
     try:
-        df = pd.read_csv(csv_file, encoding="utf-8", on_bad_lines="skip")
+        df = pd.read_csv(csv_file, encoding="utf-8", on_bad_lines="skip", engine="python")
     except Exception as e:
         print(f"⚠ Error leyendo {csv_file}: {e}")
         return 0
@@ -57,9 +57,10 @@ def count_rows(csv_file):
         return 0
 
     try:
-        df = pd.read_csv(csv_file, encoding="utf-8", on_bad_lines="skip")
+        df = pd.read_csv(csv_file, encoding="utf-8", on_bad_lines="skip", engine="python")
         return len(df)
-    except Exception:
+    except Exception as e:
+        print(f"⚠ Error contando filas en {csv_file}: {e}")
         return 0
 
 
@@ -70,7 +71,7 @@ def rebuild_training_dataset():
 
 def train_ai_models():
     print("🧠 Reentrenando IA...")
-    subprocess.run(["python", "train_and_inspect_ai.py"], check=False)
+    subprocess.run(["python", "train_ai_models.py"], check=False)
 
 
 def maybe_retrain():

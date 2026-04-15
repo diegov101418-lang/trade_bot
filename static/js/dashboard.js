@@ -1,641 +1,815 @@
-let chartInstance = null;
-let hourChartInstance = null;
-let dayChartInstance = null;
+document.addEventListener("DOMContentLoaded", () => {
+    let currentSymbol = "BTCUSDT";
+    let selectedPositionSymbol = null;
 
-function formatNumber(value, decimals = 2) {
-    const num = Number(value || 0);
-    return Number.isFinite(num) ? num.toFixed(decimals) : (0).toFixed(decimals);
-}
+    let entryLine = null;
+    let stopLine = null;
+    let tpLine = null;
 
-function setText(id, value) {
-    const el = document.getElementById(id);
-    if (el) el.innerText = value;
-}
+    const chartElement = document.getElementById("chart");
 
-function setClass(id, className) {
-    const el = document.getElementById(id);
-    if (el) el.className = className;
-}
-
-function updateHeader(data) {
-    setText("mode", data.mode || "-");
-    setText("strategy", data.strategy || "-");
-
-    const runningEl = document.getElementById("running");
-    if (runningEl) {
-        if (data.running) {
-            runningEl.innerText = "ON";
-            runningEl.className = "status-on";
-        } else {
-            runningEl.innerText = "OFF";
-            runningEl.className = "status-off";
-        }
-    }
-
-    if (data.time) {
-        const date = new Date(data.time * 1000);
-        setText("api_time", date.toLocaleTimeString());
-    }
-}
-
-function updateSystemStatus(data) {
-    const running = !!data.running;
-    const mode = data.mode || "-";
-    const strategy = data.strategy || "-";
-    const nowText = data.time ? new Date(data.time * 1000).toLocaleTimeString() : "-";
-
-    setText("system_bot_status", running ? "ACTIVO" : "PAUSADO");
-    setClass("system_bot_status", running ? "value-green" : "value-red");
-
-    setText("system_mode", mode.toUpperCase());
-    setText("system_strategy", strategy);
-
-    const maxTradesGuess = data.max_trades_per_day ?? 30;
-    const tradesTodayGuess = data.daily_trades ?? Math.min(Number(data.performance?.trades || 0), maxTradesGuess);
-
-    setText("system_daily_trades", `${tradesTodayGuess}/${maxTradesGuess}`);
-    setText("system_last_update", nowText);
-}
-
-function updateCards(data) {
-    const balance = Number(data.balance || 0);
-    const free = Number(data.free_balance || 0);
-    const used = Number(data.used_balance || 0);
-    const equity = Number(data.equity || 0);
-    const floatingPnl = Number(data.floating_pnl || 0);
-    const exposurePct = Number(data.risk_pct || 0);
-    const openPositionsCount = Number(data.open_positions_count || 0);
-
-    const performance = data.performance || {};
-    const stats = data.stats || {};
-    const riskMetrics = data.risk_metrics || {};
-
-    const totalRisk = Number(riskMetrics.total_open_risk || 0);
-    const avgRisk = Number(riskMetrics.avg_risk_per_trade || 0);
-    const realRiskPct = Number(riskMetrics.risk_pct_real || 0);
-
-    const profit = Number(performance.profit || 0);
-    const loss = Number(performance.loss || 0);
-    const netResult = profit + loss;
-    const netProfit = Number(performance.net_profit ?? netResult);
-
-    const totalTrades = Number(performance.trades || stats.total || 0);
-    const avgProfitTrade = Number(
-        performance.avg_profit_per_trade ??
-        (totalTrades > 0 ? netResult / totalTrades : 0)
-    );
-
-    const maxDrawdown = Number(performance.max_drawdown || 0);
-
-    setText("balance", formatNumber(balance));
-    setText("free_balance", formatNumber(free));
-    setText("used_balance", formatNumber(used));
-    setText("equity", formatNumber(equity));
-    setText("floating_pnl", formatNumber(floatingPnl));
-    setText("risk_pct", `${formatNumber(exposurePct)}%`);
-    setText("open_positions_count", openPositionsCount);
-
-    setText("total_risk", formatNumber(totalRisk));
-    setText("avg_risk", formatNumber(avgRisk));
-    setText("risk_real_pct", `${formatNumber(realRiskPct)}%`);
-
-    setText("profit", formatNumber(profit));
-    setText("loss", formatNumber(loss));
-    setText("net_result", formatNumber(netResult));
-    setText("net_profit", formatNumber(netProfit));
-    setText("avg_profit_per_trade", formatNumber(avgProfitTrade));
-    setText("max_drawdown", `${formatNumber(maxDrawdown, 2)}%`);
-
-    [
-        "balance", "free_balance", "used_balance", "equity", "floating_pnl",
-        "risk_pct", "open_positions_count", "total_risk", "avg_risk",
-        "risk_real_pct", "profit", "loss", "net_result", "net_profit",
-        "avg_profit_per_trade", "max_drawdown"
-    ].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.className = "";
+    const chart = LightweightCharts.createChart(chartElement, {
+        width: chartElement.clientWidth,
+        height: 680,
+        layout: {
+            background: { color: "#0f172a" },
+            textColor: "#d1d5db",
+        },
+        grid: {
+            vertLines: { color: "#1f2937" },
+            horzLines: { color: "#1f2937" },
+        },
+        crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal,
+        },
+        rightPriceScale: {
+            borderColor: "#374151",
+            scaleMargins: {
+                top: 0.08,
+                bottom: 0.08,
+            },
+        },
+        timeScale: {
+            borderColor: "#374151",
+            timeVisible: true,
+            secondsVisible: false,
+            rightOffset: 12,
+            barSpacing: 10,
+        },
     });
 
-    const equityEl = document.getElementById("equity");
-    const floatingPnlEl = document.getElementById("floating_pnl");
-    const riskPctEl = document.getElementById("risk_pct");
-    const realRiskPctEl = document.getElementById("risk_real_pct");
-    const profitEl = document.getElementById("profit");
-    const lossEl = document.getElementById("loss");
-    const netEl = document.getElementById("net_result");
-    const netProfitEl = document.getElementById("net_profit");
-    const avgProfitTradeEl = document.getElementById("avg_profit_per_trade");
-    const maxDrawdownEl = document.getElementById("max_drawdown");
+    const candleSeries = chart.addCandlestickSeries({
+        upColor: "#22c55e",
+        downColor: "#ef4444",
+        borderUpColor: "#22c55e",
+        borderDownColor: "#ef4444",
+        wickUpColor: "#22c55e",
+        wickDownColor: "#ef4444",
+    });
 
-    if (equityEl) {
-        if (equity > balance) equityEl.classList.add("value-green");
-        else if (equity < balance) equityEl.classList.add("value-red");
+    const ma50Series = chart.addLineSeries({
+        color: "#facc15",
+        lineWidth: 2,
+        priceLineVisible: false,
+        lastValueVisible: false,
+    });
+
+    const ma200Series = chart.addLineSeries({
+        color: "#38bdf8",
+        lineWidth: 2,
+        priceLineVisible: false,
+        lastValueVisible: false,
+    });
+
+    const toggleBot = document.getElementById("toggle-bot");
+    const toggleMode = document.getElementById("toggle-mode");
+    const aiLevelSelect = document.getElementById("ai-level");
+    const aiLevelBadge = document.getElementById("ai-level-badge");
+
+    toggleBot?.addEventListener("change", async () => {
+        const endpoint = toggleBot.checked ? "/start" : "/stop";
+        await fetch(endpoint);
+    });
+
+    toggleMode?.addEventListener("change", async () => {
+        const endpoint = toggleMode.checked ? "/mode/real" : "/mode/demo";
+        await fetch(endpoint);
+    });
+
+    aiLevelSelect?.addEventListener("change", () => {
+        updateAiLevelBadge(aiLevelSelect.value);
+    });
+
+    function formatReason(reason) {
+        const map = {
+            ok: "Entrada válida",
+            no_signal: "Sin señal",
+            low_liquidity: "Baja liquidez",
+            cooldown: "Cooldown activo",
+            low_winrate: "Winrate bajo",
+            risk_limits: "Límite de riesgo",
+            no_entry: "No cumple condiciones",
+        };
+
+        return map[reason] || reason;
     }
 
-    if (floatingPnlEl) {
-        if (floatingPnl > 0) floatingPnlEl.classList.add("value-green");
-        else if (floatingPnl < 0) floatingPnlEl.classList.add("value-red");
+    function updateAiLevelBadge(level) {
+        if (!aiLevelBadge) return;
+
+        const normalized = String(level || "medium").toLowerCase();
+        const labels = {
+            off: "NADA",
+            low: "POCO",
+            medium: "MEDIO",
+            high: "MUCHO",
+        };
+
+        aiLevelBadge.innerText = labels[normalized] || "MEDIO";
+
+        if (normalized === "off") aiLevelBadge.style.color = "#94a3b8";
+        else if (normalized === "low") aiLevelBadge.style.color = "#22c55e";
+        else if (normalized === "medium") aiLevelBadge.style.color = "#facc15";
+        else aiLevelBadge.style.color = "#ef4444";
     }
 
-    if (riskPctEl) {
-        if (exposurePct < 20) riskPctEl.classList.add("value-green");
-        else if (exposurePct < 50) riskPctEl.classList.add("value-yellow");
-        else riskPctEl.classList.add("value-red");
-    }
+    function setColoredValue(elementId, value, isPercent = false) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
 
-    if (realRiskPctEl) {
-        if (realRiskPct < 3) realRiskPctEl.classList.add("value-green");
-        else if (realRiskPct < 8) realRiskPctEl.classList.add("value-yellow");
-        else realRiskPctEl.classList.add("value-red");
-    }
+        const num = Number(value) || 0;
+        const previousRaw = el.dataset.prevValue;
+        const previous = previousRaw !== undefined ? Number(previousRaw) : null;
 
-    if (profitEl && profit > 0) profitEl.classList.add("value-green");
-    if (lossEl && loss < 0) lossEl.classList.add("value-red");
+        el.dataset.prevValue = num;
 
-    if (netEl) {
-        if (netResult > 0) netEl.classList.add("value-green");
-        else if (netResult < 0) netEl.classList.add("value-red");
-    }
+        if (num > 0) el.style.color = "#22c55e";
+        else if (num < 0) el.style.color = "#ef4444";
+        else el.style.color = "#e5e7eb";
 
-    if (netProfitEl) {
-        if (netProfit > 0) netProfitEl.classList.add("value-green");
-        else if (netProfit < 0) netProfitEl.classList.add("value-red");
-    }
+        el.classList.remove("flash-up", "flash-down", "flash-neutral");
+        void el.offsetWidth;
 
-    if (avgProfitTradeEl) {
-        if (avgProfitTrade > 0) avgProfitTradeEl.classList.add("value-green");
-        else if (avgProfitTrade < 0) avgProfitTradeEl.classList.add("value-red");
-    }
-
-    if (maxDrawdownEl && maxDrawdown < 0) {
-        maxDrawdownEl.classList.add("value-red");
-    }
-
-    setText("winrate", `${stats.winrate ?? 0}%`);
-    setText("trades", performance.trades ?? stats.total ?? 0);
-    setText("equity_info", `Historial de performance | Max DD: ${formatNumber(maxDrawdown, 2)}%`);
-}
-
-function pnlClass(value) {
-    const v = Number(value || 0);
-    if (v > 0) return "pnl-box pnl-pos";
-    if (v < 0) return "pnl-box pnl-neg";
-    return "pnl-box pnl-flat";
-}
-
-function updatePositions(positions) {
-    const tbody = document.getElementById("positionsTable");
-    const count = document.getElementById("positions_count");
-
-    if (!tbody || !count) return;
-
-    count.innerText = `${positions.length} posición${positions.length === 1 ? "" : "es"}`;
-
-    if (!positions.length) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="muted">Sin posiciones</td>
-            </tr>
-        `;
-        return;
-    }
-
-    tbody.innerHTML = positions.map(pos => {
-        const entry = Number(pos.entry_price || 0);
-        const current = pos.current_price !== null && pos.current_price !== undefined
-            ? Number(pos.current_price)
-            : 0;
-        const qty = Number(pos.quantity || 0);
-        const capital = Number(pos.capital || 0);
-        const pnl = Number(pos.pnl || 0);
-        const pnlPct = Number(pos.pnl_pct || 0);
-
-        return `
-            <tr>
-                <td>${pos.symbol ?? "-"}</td>
-                <td>${formatNumber(entry, 6)}</td>
-                <td>${current ? formatNumber(current, 6) : "-"}</td>
-                <td>${formatNumber(qty, 6)}</td>
-                <td>${formatNumber(capital, 2)}</td>
-                <td><span class="${pnlClass(pnl)}">${formatNumber(pnl, 4)}</span></td>
-                <td><span class="${pnlClass(pnlPct)}">${formatNumber(pnlPct, 2)}%</span></td>
-            </tr>
-        `;
-    }).join("");
-}
-
-function updateTrades(trades) {
-    const tbody = document.getElementById("tradesTable");
-    if (!tbody) return;
-
-    if (!trades.length) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="muted">Sin trades</td>
-            </tr>
-        `;
-        return;
-    }
-
-    tbody.innerHTML = trades.slice().reverse().map(trade => {
-        const resultRaw = trade.result ?? "";
-        const pnl = Number(trade.pnl || 0);
-
-        let resultText = "-";
-        let resultClass = "muted";
-
-        if (resultRaw === "1" || resultRaw === 1) {
-            resultText = "WIN";
-            resultClass = "green";
-        } else if (resultRaw === "0" || resultRaw === 0) {
-            resultText = "LOSS";
-            resultClass = "red";
+        if (previous === null || Number.isNaN(previous)) {
+            el.innerText = isPercent ? num.toFixed(2) + "%" : num.toFixed(2);
+            el.classList.add("flash-neutral");
+            return;
         }
 
-        return `
-            <tr>
-                <td>${trade.symbol ?? "-"}</td>
-                <td>${trade.rsi ?? "-"}</td>
-                <td>${trade.volume ?? "-"}</td>
-                <td>${trade.trend ?? "-"}</td>
-                <td>${trade.momentum ?? "-"}</td>
-                <td class="${resultClass}">${resultText}</td>
-                <td>
-                    <span class="${pnlClass(pnl)}">
-                        ${trade.pnl !== undefined && trade.pnl !== "" ? formatNumber(trade.pnl, 4) : "-"}
+        animateNumber(el, previous, num, {
+            duration: 500,
+            decimals: 2,
+            suffix: isPercent ? "%" : "",
+        });
+
+        if (num > previous) {
+            el.classList.add("flash-up");
+        } else if (num < previous) {
+            el.classList.add("flash-down");
+        }
+    }
+    
+
+    function clearPositionLines() {
+        if (entryLine) {
+            candleSeries.removePriceLine(entryLine);
+            entryLine = null;
+        }
+        if (stopLine) {
+            candleSeries.removePriceLine(stopLine);
+            stopLine = null;
+        }
+        if (tpLine) {
+            candleSeries.removePriceLine(tpLine);
+            tpLine = null;
+        }
+    }
+
+    function renderPositionLines(positions) {
+        clearPositionLines();
+
+        if (!positions || positions.length === 0) return;
+
+        const selectedPos = positions.find((p) => p.symbol === currentSymbol) || positions[0];
+        if (!selectedPos) return;
+
+        const entry = parseFloat(selectedPos.entry_price || 0);
+        const stop = parseFloat(selectedPos.stop_loss || 0);
+        const tp = parseFloat(selectedPos.take_profit || 0);
+
+        if (entry > 0) {
+            entryLine = candleSeries.createPriceLine({
+                price: entry,
+                color: "#3b82f6",
+                lineWidth: 1,
+                lineStyle: LightweightCharts.LineStyle.Solid,
+                axisLabelVisible: true,
+                title: "ENTRY",
+            });
+        }
+
+        if (stop > 0) {
+            stopLine = candleSeries.createPriceLine({
+                price: stop,
+                color: "#ef4444",
+                lineWidth: 1,
+                lineStyle: LightweightCharts.LineStyle.Dashed,
+                axisLabelVisible: true,
+                title: "SL",
+            });
+        }
+
+        if (tp > 0) {
+            tpLine = candleSeries.createPriceLine({
+                price: tp,
+                color: "#22c55e",
+                lineWidth: 1,
+                lineStyle: LightweightCharts.LineStyle.Dashed,
+                axisLabelVisible: true,
+                title: "TP",
+            });
+        }
+    }
+
+    function renderEquity(history) {
+        const canvas = document.getElementById("equityChart");
+        if (!canvas) return;
+
+        const ctx = canvas.getContext("2d");
+        const parentWidth = canvas.parentElement.clientWidth - 20;
+
+        canvas.width = parentWidth;
+        canvas.height = 165;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (!history || history.length < 2) {
+            ctx.fillStyle = "#94a3b8";
+            ctx.font = "14px Arial";
+            ctx.fillText("Sin datos suficientes", 20, 30);
+            return;
+        }
+
+        const padding = 20;
+        const w = canvas.width - padding * 2;
+        const h = canvas.height - padding * 2;
+
+        const minVal = Math.min(...history);
+        const maxVal = Math.max(...history);
+        const range = maxVal - minVal || 1;
+
+        const first = history[0];
+        const last = history[history.length - 1];
+
+        ctx.strokeStyle = last >= first ? "#22c55e" : "#ef4444";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+
+        history.forEach((value, i) => {
+            const x = padding + (i / (history.length - 1)) * w;
+            const y = padding + h - ((value - minVal) / range) * h;
+
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        });
+
+        ctx.stroke();
+    }
+
+    function renderPositions(positions) {
+        const container = document.getElementById("positions");
+        if (!container) return;
+
+        container.innerHTML = "";
+
+        if (!positions || positions.length === 0) {
+            container.innerHTML = "<div class='position'>Sin posiciones abiertas</div>";
+            return;
+        }
+
+        positions.forEach((p) => {
+            const pnlGross = Number(p.pnl_gross ?? p.pnl ?? 0);
+            const pnlNet = Number(p.pnl_net ?? pnlGross);
+            const feeTotal = Number(p.fee_total_est ?? 0);
+            const colorNet = pnlNet > 0 ? "#22c55e" : pnlNet < 0 ? "#ef4444" : "#e5e7eb";
+
+            const stopText =
+                p.stop_loss != null && p.stop_loss !== ""
+                    ? Number(p.stop_loss).toFixed(4)
+                    : "-";
+
+            const tpText =
+                p.take_profit != null && p.take_profit !== ""
+                    ? Number(p.take_profit).toFixed(4)
+                    : "-";
+
+            const entryText =
+                p.entry_price != null && p.entry_price !== ""
+                    ? Number(p.entry_price).toFixed(4)
+                    : "-";
+
+            const div = document.createElement("div");
+            div.className = "position";
+            div.style.cursor = "pointer";
+            div.style.marginBottom = "8px";
+
+            if (p.symbol === currentSymbol) {
+                div.style.background = "rgba(59,130,246,0.12)";
+                div.style.border = "1px solid #3b82f6";
+            } else {
+                div.style.background = "rgba(15,23,42,0.5)";
+            }
+
+            div.innerHTML = `
+                <strong>${p.symbol}</strong><br>
+                Entry: ${entryText}<br>
+                SL: ${stopText}<br>
+                TP: ${tpText}<br>
+                Gross: ${pnlGross.toFixed(4)}<br>
+                Fees est: ${feeTotal.toFixed(4)}<br>
+                <span style="color:${colorNet}">Net: ${pnlNet.toFixed(4)}</span>
+            `;
+
+            div.addEventListener("click", async () => {
+                selectedPositionSymbol = p.symbol;
+                currentSymbol = p.symbol;
+                await loadChart(currentSymbol);
+                renderPositions(positions);
+                renderPositionLines(positions);
+            });
+
+            container.appendChild(div);
+        });
+    }
+
+    function getTradeStatus(t) {
+        const rawResult = String(t.result ?? "").trim();
+        const pnlNum = Number(t.pnl_net ?? t.pnl ?? 0);
+
+        if (rawResult === "" || rawResult.toLowerCase() === "open") {
+            return "open";
+        }
+
+        if (rawResult === "1") return "win";
+        if (rawResult === "0") return "loss";
+
+        if (pnlNum > 0) return "win";
+        if (pnlNum < 0) return "loss";
+
+        return "open";
+    }
+
+    function buildTradeRow(t, statusText) {
+        const symbol = t.symbol ?? "-";
+        const pnlValueRaw = String(t.pnl_net ?? t.pnl ?? "").trim();
+        const pnlNum = pnlValueRaw === "" ? 0 : Number(pnlValueRaw);
+        const pnlText = pnlValueRaw === "" ? "-" : pnlNum.toFixed(4);
+        const strategy = t.strategy_name ?? "-";
+        const fee = Number(t.fee_total || 0).toFixed(4);
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${symbol}</td>
+            <td>${statusText}</td>
+            <td>${pnlText}</td>
+            <td>${strategy}</td>
+            <td>${fee}</td>
+        `;
+
+        if (statusText === "WIN") tr.style.color = "#22c55e";
+        else if (statusText === "LOSS") tr.style.color = "#ef4444";
+        else tr.style.color = "#facc15";
+
+        return tr;
+    }
+
+    function renderTrades(trades) {
+        const summaryContainer = document.getElementById("trade-summary-list");
+        const winsTbody = document.querySelector("#wins-table tbody");
+        const lossesTbody = document.querySelector("#losses-table tbody");
+
+        if (!summaryContainer || !winsTbody || !lossesTbody) return;
+
+        summaryContainer.innerHTML = "";
+        winsTbody.innerHTML = "";
+        lossesTbody.innerHTML = "";
+
+        if (!trades || trades.length === 0) {
+            summaryContainer.innerHTML = "<div class='position'>Sin trades recientes</div>";
+
+            const emptyWin = document.createElement("tr");
+            emptyWin.innerHTML = `<td colspan="5">Sin wins</td>`;
+            winsTbody.appendChild(emptyWin);
+
+            const emptyLoss = document.createElement("tr");
+            emptyLoss.innerHTML = `<td colspan="5">Sin losses</td>`;
+            lossesTbody.appendChild(emptyLoss);
+            return;
+        }
+
+        const recentTrades = trades.slice(-18).reverse();
+
+        let winCount = 0;
+        let lossCount = 0;
+
+        recentTrades.forEach((t) => {
+            const symbol = t.symbol ?? "-";
+            const status = getTradeStatus(t);
+
+            const summaryItem = document.createElement("div");
+            summaryItem.className = "trade-summary-item";
+
+            let badgeText = "OPEN";
+            if (status === "win") badgeText = "WIN";
+            else if (status === "loss") badgeText = "LOSS";
+
+            summaryItem.innerHTML = `
+                <span class="trade-summary-symbol">${symbol}</span>
+                <span class="trade-summary-badge ${status}">${badgeText}</span>
+            `;
+
+            summaryContainer.appendChild(summaryItem);
+
+            if (status === "win") {
+                winsTbody.appendChild(buildTradeRow(t, "WIN"));
+                winCount++;
+            }
+
+            if (status === "loss") {
+                lossesTbody.appendChild(buildTradeRow(t, "LOSS"));
+                lossCount++;
+            }
+        });
+
+        if (winCount === 0) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td colspan="5">Sin wins recientes</td>`;
+            winsTbody.appendChild(tr);
+        }
+
+        if (lossCount === 0) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td colspan="5">Sin losses recientes</td>`;
+            lossesTbody.appendChild(tr);
+        }
+    }
+
+    function renderMarkers(trades) {
+        const markers = [];
+
+        (trades || []).forEach((t) => {
+            if (!t.timestamp) return;
+
+            const time = parseInt(t.timestamp);
+            if (!Number.isFinite(time)) return;
+
+            if (String(t.result ?? "").trim() === "") {
+                markers.push({
+                    time: time,
+                    position: "belowBar",
+                    color: "#3b82f6",
+                    shape: "circle",
+                    text: "ENTRY",
+                });
+            } else {
+                const pnl = parseFloat(t.pnl_net || t.pnl || 0);
+                const isWin = pnl > 0;
+
+                markers.push({
+                    time: time,
+                    position: "aboveBar",
+                    color: isWin ? "#22c55e" : "#ef4444",
+                    shape: "arrowDown",
+                    text: isWin ? "TP" : "SL",
+                });
+            }
+        });
+
+        candleSeries.setMarkers(markers);
+    }
+
+    function renderAlerts(alerts) {
+        const container = document.getElementById("alerts");
+        if (!container) return;
+
+        container.innerHTML = "";
+
+        if (!alerts || alerts.length === 0) {
+            container.innerHTML = "Sin alertas";
+            return;
+        }
+
+        alerts.forEach((a) => {
+            const div = document.createElement("div");
+            div.className = "position";
+
+            let color = "#e5e7eb";
+            const text = String(a).toLowerCase();
+
+            if (text.includes("positivo") || text.includes("ganancia") || text.includes("profit")) {
+                color = "#22c55e";
+            } else if (
+                text.includes("riesgo") ||
+                text.includes("pérdida") ||
+                text.includes("perdida") ||
+                text.includes("bajo")
+            ) {
+                color = "#ef4444";
+            } else if (text.includes("varias") || text.includes("moderado")) {
+                color = "#facc15";
+            }
+
+            div.style.color = color;
+            div.textContent = a;
+            container.appendChild(div);
+        });
+    }
+
+    function renderDecisions(decisions) {
+        const container = document.getElementById("decisions");
+        if (!container) return;
+
+        container.innerHTML = "";
+
+        if (!decisions || decisions.length === 0) {
+            container.innerHTML = "<div class='position'>Sin decisiones recientes</div>";
+            return;
+        }
+
+        decisions.forEach((d) => {
+            const div = document.createElement("div");
+            div.className = "position";
+
+            const decision = String(d.decision || "SKIP").toUpperCase();
+            const symbol = d.symbol || "-";
+            const confidence = Number(d.confidence || 0).toFixed(2);
+            const liquidity = d.liquidity || "-";
+            const reason = formatReason(d.reason || "-");
+
+            const time = d.time
+                ? new Date(d.time * 1000).toLocaleTimeString()
+                : "--:--";
+
+            let color = "#facc15";
+            if (decision === "BUY") color = "#22c55e";
+            else if (decision === "SELL") color = "#38bdf8";
+
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <strong style="font-size:14px;">${symbol}</strong>
+                    <span style="
+                        background:${color}22;
+                        color:${color};
+                        padding:2px 8px;
+                        border-radius:999px;
+                        font-size:11px;
+                        font-weight:700;
+                    ">
+                        ${decision}
                     </span>
-                </td>
-            </tr>
-        `;
-    }).join("");
-}
+                </div>
 
-function updateAlerts(data) {
-    const container = document.getElementById("alertsList");
-    if (!container) return;
+                <div style="font-size:12px; color:#94a3b8; display:flex; justify-content:space-between;">
+                    <span>Conf: ${confidence}</span>
+                    <span>${time}</span>
+                </div>
 
-    const alerts = [];
+                <div style="font-size:12px; margin-top:4px;">
+                    <span style="color:#94a3b8;">Liq:</span> ${liquidity}
+                </div>
 
-    const exposurePct = Number(data.risk_pct || 0);
-    const floatingPnl = Number(data.floating_pnl || 0);
-    const openPositions = Number(data.open_positions_count || 0);
-    const winrate = Number(data.stats?.winrate || 0);
-    const netProfit = Number(data.performance?.net_profit || (Number(data.performance?.profit || 0) + Number(data.performance?.loss || 0)));
-    const realRiskPct = Number(data.risk_metrics?.risk_pct_real || 0);
+                <div style="
+                    font-size:12px;
+                    margin-top:4px;
+                    color:${d.reason === "ok" ? "#22c55e" : "#facc15"};
+                ">
+                    ${reason}
+                </div>
+            `;
 
-    if (exposurePct >= 50) {
-        alerts.push("⛔ Exposición alta: capital comprometido superior al 50%");
-    } else if (exposurePct >= 20) {
-        alerts.push("⚠ Exposición moderada: capital comprometido entre 20% y 50%");
+            container.appendChild(div);
+        });
     }
 
-    if (realRiskPct >= 8) {
-        alerts.push(`⛔ Riesgo real alto: ${formatNumber(realRiskPct, 2)}%`);
-    } else if (realRiskPct >= 3) {
-        alerts.push(`⚠ Riesgo real moderado: ${formatNumber(realRiskPct, 2)}%`);
+    async function loadChart(symbol = currentSymbol) {
+        try {
+            const res = await fetch(`/api/chart/${symbol}`);
+            if (!res.ok) {
+                console.error("API chart error:", res.status);
+                return;
+            }
+
+            const data = await res.json();
+
+            if (!data.candles || data.candles.length === 0) return;
+
+            candleSeries.setData(data.candles);
+            ma50Series.setData(data.ma50 || []);
+            ma200Series.setData(data.ma200 || []);
+
+            const lastCandle = data.candles[data.candles.length - 1];
+            const symbolEl = document.getElementById("symbol");
+            const priceEl = document.getElementById("price");
+
+            if (lastCandle && symbolEl) symbolEl.innerText = symbol;
+            if (lastCandle && priceEl) priceEl.innerText = Number(lastCandle.close).toFixed(2);
+
+            chart.timeScale().fitContent();
+        } catch (err) {
+            console.error("Error chart:", err);
+        }
     }
 
-    if (openPositions >= 3) {
-        alerts.push(`📂 Varias posiciones abiertas: ${openPositions}`);
-    }
+    async function loadDashboard() {
+        try {
+            const res = await fetch("/api/data");
+            if (!res.ok) {
+                console.error("API data error:", res.status);
+                return;
+            }
 
-    if (floatingPnl < 0) {
-        alerts.push(`📉 PnL flotante negativo: ${formatNumber(floatingPnl, 4)}`);
-    } else if (floatingPnl > 0) {
-        alerts.push(`📈 PnL flotante positivo: ${formatNumber(floatingPnl, 4)}`);
-    }
+            const data = await res.json();
 
-    if (winrate < 40 && Number(data.performance?.trades || 0) > 30) {
-        alerts.push(`⚠ Winrate bajo: ${formatNumber(winrate, 2)}%`);
-    }
+            if (data.performance) {
+                setColoredValue("balance", data.performance.balance);
+                setColoredValue("profit", data.performance.profit);
+                setColoredValue("loss", data.performance.loss);
+                setColoredValue("net-profit", data.performance.net_profit);
+                setColoredValue("avg-profit", data.performance.avg_profit_per_trade);
+                setColoredValue("drawdown", data.performance.max_drawdown, true);
 
-    if (netProfit > 0) {
-        alerts.push(`✅ Sistema en ganancia neta: ${formatNumber(netProfit, 4)}`);
-    } else if (netProfit < 0) {
-        alerts.push(`⚠ Sistema en pérdida neta: ${formatNumber(netProfit, 4)}`);
-    }
+                setAnimatedText("wins", data.performance.wins ?? 0, "#22c55e");
+                setAnimatedText("losses", data.performance.losses ?? 0, "#ef4444");
+                setAnimatedText("trades", data.performance.trades ?? 0, "#e5e7eb");
 
-    if (!data.running) {
-        alerts.push("⏸ Bot en pausa");
-    }
+                const winrate = Number(data.performance.winrate ?? 0);
+                const winElColor =
+                    winrate >= 50 ? "#22c55e" :
+                    winrate >= 40 ? "#facc15" :
+                    "#ef4444";
 
-    if (!alerts.length) {
-        container.innerHTML = `<div class="alert-empty">Sin alertas por ahora</div>`;
-        return;
-    }
-
-    container.innerHTML = alerts.map(alert => `
-        <div class="alert-item">${alert}</div>
-    `).join("");
-}
-
-function updateChart(history) {
-    const canvas = document.getElementById("equityChart");
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-
-    if (chartInstance) {
-        chartInstance.destroy();
-    }
-
-    chartInstance = new Chart(ctx, {
-        type: "line",
-        data: {
-            labels: history.map((_, i) => i + 1),
-            datasets: [{
-                label: "Equity",
-                data: history,
-                borderColor: "#38bdf8",
-                backgroundColor: "rgba(56, 189, 248, 0.12)",
-                tension: 0.25,
-                fill: true,
-                pointRadius: 1.5
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    labels: {
-                        color: "#e5e7eb"
-                    }
+                setColoredValue("winrate", winrate, true);
+                const winEl = document.getElementById("winrate");
+                if (winEl) {
+                    winEl.style.color = winElColor;
                 }
-            },
-            scales: {
-                x: {
-                    ticks: { color: "#94a3b8" },
-                    grid: { color: "#1f2937" }
-                },
-                y: {
-                    ticks: { color: "#94a3b8" },
-                    grid: { color: "#1f2937" }
+
+                renderEquity(data.performance.history || []);
+            }
+
+            const botStatusEl = document.getElementById("bot-status");
+            if (botStatusEl) {
+                botStatusEl.innerText = data.running ? "RUNNING" : "STOPPED";
+                botStatusEl.style.color = data.running ? "#22c55e" : "#ef4444";
+            }
+
+            const modeEl = document.getElementById("mode");
+            if (modeEl) {
+                modeEl.innerText = data.mode ?? "-";
+                modeEl.style.color = data.mode === "real" ? "#ef4444" : "#22c55e";
+            }
+
+            const strategyEl = document.getElementById("strategy");
+            if (strategyEl) strategyEl.innerText = data.strategy ?? "-";
+
+            if (toggleBot) toggleBot.checked = !!data.running;
+            if (toggleMode) toggleMode.checked = data.mode === "real";
+
+            const botStatusText = document.getElementById("bot-status-text");
+            if (botStatusText) botStatusText.innerText = data.running ? "RUNNING" : "STOPPED";
+
+            const modeText = document.getElementById("mode-text");
+            if (modeText) modeText.innerText = data.mode === "real" ? "REAL" : "DEMO";
+
+            const currentAiVisualLevel = aiLevelSelect?.value || "medium";
+            updateAiLevelBadge(currentAiVisualLevel);
+
+            if (data.ai) {
+                const aiStrategy = document.getElementById("ai-strategy");
+                const aiRisk = document.getElementById("ai-risk");
+
+                if (aiStrategy) {
+                    aiStrategy.innerText = data.ai.strategy_suggestion || "-";
+                    aiStrategy.style.color = "#38bdf8";
+                }
+
+                if (aiRisk) {
+                    aiRisk.innerText = data.ai.risk_suggestion || "-";
+                    const riskValue = String(data.ai.risk_suggestion || "").toLowerCase();
+
+                    if (riskValue === "aggressive") aiRisk.style.color = "#ef4444";
+                    else if (riskValue === "conservative") aiRisk.style.color = "#22c55e";
+                    else aiRisk.style.color = "#facc15";
                 }
             }
+
+            if (data.positions && data.positions.length > 0) {
+                const exists = data.positions.some((p) => p.symbol === selectedPositionSymbol);
+
+                if (exists) {
+                    currentSymbol = selectedPositionSymbol;
+                } else {
+                    currentSymbol = data.positions[0].symbol;
+                    selectedPositionSymbol = currentSymbol;
+                }
+            } else {
+                currentSymbol = "BTCUSDT";
+                selectedPositionSymbol = null;
+            }
+
+            await loadChart(currentSymbol);
+
+            renderPositions(data.positions || []);
+            renderPositionLines(data.positions || []);
+            renderTrades(data.trades || []);
+            renderMarkers(data.trades || []);
+            renderAlerts(data.alerts || []);
+            renderDecisions(data.last_decisions || []);
+            await loadTodayStats();
+        } catch (err) {
+            console.error("Error dashboard:", err);
         }
-    });
-}
-
-function updateHourChart(hourAnalysis) {
-    const canvas = document.getElementById("hourChart");
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-
-    const labels = hourAnalysis.map(item =>
-        `${String(item.hour).padStart(2, "0")}:00`
-    );
-
-    const tradesData = hourAnalysis.map(item => Number(item.trades || 0));
-    const winrateData = hourAnalysis.map(item => Number(item.winrate || 0));
-
-    if (hourChartInstance) {
-        hourChartInstance.destroy();
     }
 
-    hourChartInstance = new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: "Trades",
-                    data: tradesData,
-                    backgroundColor: "rgba(56, 189, 248, 0.35)",
-                    borderColor: "#38bdf8",
-                    borderWidth: 1
-                },
-                {
-                    label: "Winrate %",
-                    data: winrateData,
-                    type: "line",
-                    borderColor: "#22c55e",
-                    backgroundColor: "rgba(34, 197, 94, 0.15)",
-                    tension: 0.25,
-                    fill: false,
-                    pointRadius: 2,
-                    yAxisID: "y1"
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    labels: {
-                        color: "#e5e7eb"
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    ticks: { color: "#94a3b8" },
-                    grid: { color: "#1f2937" }
-                },
-                y: {
-                    beginAtZero: true,
-                    ticks: { color: "#94a3b8" },
-                    grid: { color: "#1f2937" },
-                    title: {
-                        display: true,
-                        text: "Trades",
-                        color: "#94a3b8"
-                    }
-                },
-                y1: {
-                    beginAtZero: true,
-                    position: "right",
-                    min: 0,
-                    max: 100,
-                    ticks: { color: "#94a3b8" },
-                    grid: { drawOnChartArea: false },
-                    title: {
-                        display: true,
-                        text: "Winrate %",
-                        color: "#94a3b8"
-                    }
-                }
-            }
-        }
-    });
-}
+    function startAutoRefresh() {
+        setInterval(() => {
+            loadDashboard();
+        }, 5000);
+    }
 
-async function loadData() {
+    loadDashboard();
+    startAutoRefresh();
+
+    window.addEventListener("resize", () => {
+        chart.applyOptions({
+            width: chartElement.clientWidth,
+        });
+    });
+    async function loadTodayStats() {
     try {
-        const res = await fetch("/api/data");
+        const res = await fetch("/api/stats/today");
+        if (!res.ok) {
+            console.error("API today stats error:", res.status);
+            return;
+        }
+
         const data = await res.json();
 
-        console.log("DATA API:", data);
-
-        updateHeader(data);
-        updateSystemStatus(data);
-        updateCards(data);
-        updatePositions(data.positions || []);
-        updateTrades(data.trades || []);
-        updateAlerts(data);
-        updateChart(data.history || []);
-        updateHourChart(data.hour_analysis || []);
-        updateDayChart(data.day_analysis || []);
-        updateSessionChart(data.data.session_analysis || []);
+        setColoredValue("daily-net", data.pnl_net ?? 0);
 
     } catch (err) {
-        console.error("Error cargando dashboard:", err);
+        console.error("Error today stats:", err);
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    loadData();
-    setInterval(loadData, 3000);
 });
-function updateDayChart(dayAnalysis) {
-    const canvas = document.getElementById("dayChart");
-    if (!canvas) return;
+function setAnimatedText(elementId, value, color = null, suffix = "") {
+    const el = document.getElementById(elementId);
+    if (!el) return;
 
-    const ctx = canvas.getContext("2d");
+    const num = Number(value) || 0;
+    const previousRaw = el.dataset.prevValue;
+    const previous = previousRaw !== undefined ? Number(previousRaw) : null;
 
-    const labels = dayAnalysis.map(item => item.day);
-    const tradesData = dayAnalysis.map(item => Number(item.trades || 0));
-    const winrateData = dayAnalysis.map(item => Number(item.winrate || 0));
+    el.dataset.prevValue = num;
 
-    if (dayChartInstance) {
-        dayChartInstance.destroy();
+    if (color) {
+        el.style.color = color;
     }
 
-    dayChartInstance = new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: "Trades",
-                    data: tradesData,
-                    backgroundColor: "rgba(59, 130, 246, 0.3)",
-                    borderColor: "#3b82f6",
-                    borderWidth: 1
-                },
-                {
-                    label: "Winrate %",
-                    data: winrateData,
-                    type: "line",
-                    borderColor: "#22c55e",
-                    tension: 0.25,
-                    yAxisID: "y1"
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    ticks: { color: "#94a3b8" },
-                    grid: { color: "#1f2937" }
-                },
-                y1: {
-                    position: "right",
-                    min: 0,
-                    max: 100,
-                    grid: { drawOnChartArea: false }
-                }
-            },
-            plugins: {
-                legend: {
-                    labels: { color: "#e5e7eb" }
-                }
-            }
-        }
-    });
-}
-let sessionChartInstance = null;
+    el.classList.remove("flash-up", "flash-down", "flash-neutral");
+    void el.offsetWidth;
 
-function updateSessionChart(sessionAnalysis) {
-    const canvas = document.getElementById("sessionChart");
-    if (!canvas || !sessionAnalysis || sessionAnalysis.length === 0) return;
-
-    const ctx = canvas.getContext("2d");
-
-    const labels = sessionAnalysis.map(s => s.session.toUpperCase());
-    const trades = sessionAnalysis.map(s => Number(s.trades || 0));
-    const winrate = sessionAnalysis.map(s => Number(s.winrate || 0));
-    const pnl = sessionAnalysis.map(s => Number(s.net_pnl || 0));
-
-    if (sessionChartInstance) {
-        sessionChartInstance.destroy();
+    if (previous === null || Number.isNaN(previous)) {
+        el.innerText = `${num}${suffix}`;
+        el.classList.add("flash-neutral");
+        return;
     }
 
-    sessionChartInstance = new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: "Trades",
-                    data: trades,
-                    backgroundColor: "rgba(56, 189, 248, 0.4)",
-                    borderColor: "#38bdf8",
-                    borderWidth: 1
-                },
-                {
-                    label: "Winrate %",
-                    data: winrate,
-                    type: "line",
-                    borderColor: "#22c55e",
-                    tension: 0.25,
-                    yAxisID: "y1"
-                },
-                {
-                    label: "PnL",
-                    data: pnl,
-                    type: "line",
-                    borderColor: "#f59e0b",
-                    tension: 0.25,
-                    yAxisID: "y2"
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    labels: { color: "#e5e7eb" }
-                }
-            },
-            scales: {
-                x: {
-                    ticks: { color: "#94a3b8" },
-                    grid: { color: "#1f2937" }
-                },
-                y: {
-                    beginAtZero: true,
-                    ticks: { color: "#94a3b8" },
-                    title: {
-                        display: true,
-                        text: "Trades",
-                        color: "#94a3b8"
-                    }
-                },
-                y1: {
-                    position: "right",
-                    min: 0,
-                    max: 100,
-                    ticks: { color: "#22c55e" },
-                    grid: { drawOnChartArea: false },
-                    title: {
-                        display: true,
-                        text: "Winrate %",
-                        color: "#22c55e"
-                    }
-                },
-                y2: {
-                    position: "right",
-                    ticks: { color: "#f59e0b" },
-                    grid: { drawOnChartArea: false },
-                    title: {
-                        display: true,
-                        text: "PnL",
-                        color: "#f59e0b"
-                    }
-                }
-            }
-        }
+    animateNumber(el, previous, num, {
+        duration: 400,
+        decimals: 0,
+        suffix: suffix,
     });
+
+    if (num > previous) {
+        el.classList.add("flash-up");
+    } else if (num < previous) {
+        el.classList.add("flash-down");
+    }
 }
+function animateNumber(el, from, to, options = {}) {
+    if (!el) return;
+
+    const {
+        duration = 450,
+        decimals = 2,
+        suffix = "",
+    } = options;
+
+    const start = performance.now();
+    const change = to - from;
+
+    function easeOutCubic(t) {
+        return 1 - Math.pow(1 - t, 3);
+    }
+
+    function frame(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = easeOutCubic(progress);
+
+        const current = from + change * eased;
+        el.innerText = current.toFixed(decimals) + suffix;
+
+        if (progress < 1) {
+            requestAnimationFrame(frame);
+        } else {
+            el.innerText = to.toFixed(decimals) + suffix;
+        }
+    }
+
+    requestAnimationFrame(frame);
+}
+
+

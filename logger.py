@@ -1,37 +1,26 @@
-import csv
-import time
 from datetime import datetime
-FILE_NAME = "trades_dataset.csv"
+
+LOG_FILE = "bot_log.txt"
+ORDERS_LOG_FILE = "orders_log.txt"
 
 
-def log_trade(symbol, action, price, quantity, rsi, ma50, ma200, volume, result):
-
-    timestamp = int(time.time())
-    now = datetime.utcnow
-
-    row = {
-        "timestamp": now.isofornat(),
-        "symbol": symbol,
-        "action": action,
-        "price": price,
-        "quantity": quantity,
-        "rsi": rsi,
-        "ma50": ma50,
-        "ma200": ma200,
-        "volume": volume,
-        "hour": now.hour,
-        "result": result 
-        }
-    
+def log(msg):
+    line = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | {msg}"
+    print(line)
 
     try:
-
-        with open(FILE_NAME, "a", newline="") as f:
-
-            writer = csv.writer(f)
-
-            writer.writerow(row)
-
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
     except Exception as e:
+        print(f"Error guardando log: {e}")
 
-        print("Error guardando trade:", e)
+
+def log_order(msg):
+    line = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | {msg}"
+    print(line)
+
+    try:
+        with open(ORDERS_LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+    except Exception as e:
+        print(f"Error guardando order log: {e}")

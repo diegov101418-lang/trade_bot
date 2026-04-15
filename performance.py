@@ -10,15 +10,15 @@ def get_performance():
     real_balance = get_balance()
     history = []
 
-    total_profit = 0
-    total_loss = 0
+    total_profit = 0.0
+    total_loss = 0.0
     wins = 0
     losses = 0
     trades_count = 0
 
     running_balance = INITIAL_BALANCE
     peak_balance = INITIAL_BALANCE
-    max_drawdown = 0
+    max_drawdown = 0.0
 
     if not os.path.exists(TRADES_FILE):
         return build_response(
@@ -36,31 +36,31 @@ def get_performance():
         reader = csv.DictReader(f)
 
         for row in reader:
-            raw_result = row.get("result", "")
-            raw_pnl = row.get("pnl", "")
+            raw_result = str(row.get("result", "")).strip()
+            raw_pnl = row.get("pnl_net", row.get("pnl", ""))
 
             # ignorar trades sin cerrar
-            if raw_result == "":
+            if raw_result == "" or raw_result.lower() == "open":
                 continue
-
-            trades_count += 1
 
             try:
                 result = int(float(raw_result))
-            except:
+            except Exception:
                 continue
+
+            trades_count += 1
 
             if result == 1:
                 wins += 1
             else:
                 losses += 1
 
-            pnl_value = 0
+            pnl_value = 0.0
             if raw_pnl != "":
                 try:
                     pnl_value = float(raw_pnl)
-                except:
-                    pnl_value = 0
+                except Exception:
+                    pnl_value = 0.0
 
             if pnl_value > 0:
                 total_profit += pnl_value

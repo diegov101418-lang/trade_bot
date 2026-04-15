@@ -5,8 +5,6 @@ import joblib
 
 from sklearn.ensemble import RandomForestClassifier
 
-MODEL_FILE = "strategy_learner.pkl"
-
 FEATURES = [
     "rsi",
     "volume",
@@ -50,7 +48,7 @@ def load_dataset(file="trades_dataset_train.csv"):
         return None
 
     try:
-        df = pd.read_csv(file, encoding="utf-8", on_bad_lines="skip")
+        df = pd.read_csv(file, encoding="utf-8", on_bad_lines="skip", engine="python")
         return df
     except Exception as e:
         print(f"⚠ Error leyendo dataset: {e}")
@@ -58,12 +56,20 @@ def load_dataset(file="trades_dataset_train.csv"):
 
 
 def prepare_dataset(df):
-    required = FEATURES[:-2] + [
+    required = [
+        "rsi",
+        "volume",
+        "trend",
+        "momentum",
+        "hour",
+        "day_of_week",
+        "signal_confidence",
+        "atr",
         "market_regime",
         "volatility_context",
         TARGET_STRATEGY,
         TARGET_RISK,
-        "result"
+        "result",
     ]
 
     missing = [c for c in required if c not in df.columns]
@@ -73,12 +79,21 @@ def prepare_dataset(df):
 
     df = df.copy()
     df = df.replace([np.inf, -np.inf], np.nan)
+
     df = df[df["result"].astype(str).str.strip() != ""]
+    df = df[df[TARGET_STRATEGY].astype(str).str.strip() != ""]
+    df = df[df[TARGET_RISK].astype(str).str.strip() != ""]
 
     numeric_cols = [
-        "rsi", "volume", "trend", "momentum",
-        "hour", "day_of_week", "signal_confidence",
-        "atr", "result"
+        "rsi",
+        "volume",
+        "trend",
+        "momentum",
+        "hour",
+        "day_of_week",
+        "signal_confidence",
+        "atr",
+        "result",
     ]
 
     for col in numeric_cols:
@@ -87,12 +102,9 @@ def prepare_dataset(df):
     df["market_regime_num"] = df["market_regime"].apply(encode_market_regime)
     df["volatility_context_num"] = df["volatility_context"].apply(encode_volatility)
 
-    df = df.dropna(subset=[
-        "rsi", "volume", "trend", "momentum",
-        "hour", "day_of_week", "signal_confidence",
-        "market_regime_num", "atr", "volatility_context_num",
-        TARGET_STRATEGY, TARGET_RISK, "result"
-    ])
+    df = df[df["result"].isin([0, 1])]
+
+    df = df.dropna(subset=FEATURES + [TARGET_STRATEGY, TARGET_RISK])
 
     return df
 
@@ -107,6 +119,8 @@ def train_strategy_models(file="trades_dataset_train.csv"):
         print("⚠ Muy pocos datos para entrenar strategy learner")
         return None, None
 
+    print(f"📊 Filas válidas para entrenar: {len(df)}")
+
     X = df[FEATURES]
 
     y_strategy = df[TARGET_STRATEGY].astype(str)
@@ -114,6 +128,9 @@ def train_strategy_models(file="trades_dataset_train.csv"):
 
     strategy_model = None
     risk_model = None
+
+    print("📈 strategy_name únicos:", sorted(y_strategy.unique()))
+    print("⚙ risk_mode únicos:", sorted(y_risk.unique()))
 
     if y_strategy.nunique() < 2:
         print("⚠ Aún no hay variedad suficiente en strategy_name")

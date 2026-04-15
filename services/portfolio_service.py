@@ -9,7 +9,11 @@ def get_portfolio_data(live_positions=None):
     free_balance = float(get_free_balance() or 0)
     used_balance = float(get_used_balance() or 0)
 
-    floating_pnl = round(sum(float(p.get("pnl", 0) or 0) for p in live_positions), 4)
+    floating_pnl = round(
+        sum(float(p.get("pnl_net", p.get("pnl", 0)) or 0) for p in live_positions),
+        4
+    )
+
     equity = round(balance + floating_pnl, 4)
     risk_pct = round((used_balance / balance) * 100, 2) if balance > 0 else 0
     open_positions_count = len(live_positions)
@@ -20,7 +24,7 @@ def get_portfolio_data(live_positions=None):
         "used_balance": round(used_balance, 4),
         "equity": equity,
         "floating_pnl": floating_pnl,
-        "risk_pct": risk_pct,   # exposición actual
+        "risk_pct": risk_pct,
         "open_positions_count": open_positions_count,
     }
 

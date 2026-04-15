@@ -89,9 +89,12 @@ def get_winrate():
                     if int(row["result"]) == 1:
                         wins += 1
     except:
-        return 0
+        return None
 
-    return wins / total if total > 0 else 0
+    if total == 0:
+            return None  
+
+    return wins / total
 
 
 def update_trade_result(symbol, result, pnl_real):

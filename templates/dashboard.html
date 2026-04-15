@@ -1,276 +1,221 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trading Bot PRO</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Bot del 10 ></title>
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="/static/js/dashboard.js" defer></script>
 </head>
-
 <body>
+    <div class="app-container">
 
-    <h1>🚀 Trading Bot PRO</h1>
+        <header class="top-bar">
+            <div class="brand-block">
+                <div class="logo">
+                    <img src="{{ url_for('static', filename='logo.png') }}" class="logo-img" alt="Logo">
+                    <div class="logo-text-block">
+                        <span class="logo-claim">Trading inteligente, decisiones de campeón</span>
+                    </div>
+                </div>
+            </div>
 
-    <div class="topbar">
-        <div>Modo: <span id="mode" class="mode-badge">-</span></div>
-        <div>Estado: <span id="running" class="status-off">-</span></div>
-        <div>Estrategia: <span id="strategy" class="strategy-badge">-</span></div>
-        <div>Hora API: <span id="api_time" class="muted">-</span></div>
+            <div class="top-stats">
+                <div class="stat-card stat-balance">
+                    <span class="stat-label">Balance</span>
+                    <span class="stat-value" id="balance">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Profit</span>
+                    <span class="stat-value" id="profit">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Loss</span>
+                    <span class="stat-value" id="loss">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Net</span>
+                    <span class="stat-value" id="net-profit">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Avg/Trade</span>
+                    <span class="stat-value" id="avg-profit">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Winrate</span>
+                    <span class="stat-value" id="winrate">0%</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Net Hoy</span>
+                    <span class="stat-value" id="daily-net">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Wins</span>
+                    <span class="stat-value" id="wins">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Losses</span>
+                    <span class="stat-value" id="losses">0</span>
+                </div>
+                
+                <div class="stat-card">
+                    <span class="stat-label">Trades</span>
+                    <span class="stat-value" id="trades">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Drawdown</span>
+                    <span class="stat-value" id="drawdown">0%</span>
+                </div>
+            </div>
+
+            <div class="top-controls">
+                <div class="control-group">
+                    <label>Bot</label>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-bot">
+                        <span class="slider"></span>
+                    </label>
+                    <span id="bot-status-text">STOPPED</span>
+                </div>
+
+                <div class="control-group">
+                    <label>Modo</label>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-mode">
+                        <span class="slider"></span>
+                    </label>
+                    <span id="mode-text">DEMO</span>
+                </div>
+
+                <div class="control-group control-group-select">
+                    <label for="ai-level">IA</label>
+                    <select id="ai-level">
+                        <option value="off">Nada</option>
+                        <option value="low">Poco</option>
+                        <option value="medium" selected>Medio</option>
+                        <option value="high">Mucho</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-grid">
+            <section class="chart-section">
+                <div class="chart-header">
+                    <div class="chart-title-block">
+                        <span id="symbol">BTCUSDT</span>
+                        <span class="chart-badge">5m</span>
+                    </div>
+                    <div id="price" class="live-price">0.00</div>
+                </div>
+
+                <div id="chart"></div>
+            </section>
+
+            <aside class="side-panel">
+                <div class="status-grid">
+                    <div class="card">
+                        <h3>Bot status</h3>
+                        <div class="info-row">
+                            <span>Estado</span>
+                            <span id="bot-status">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span>Modo</span>
+                            <span id="mode">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span>Estrategia</span>
+                            <span id="strategy">-</span>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>IA</h3>
+                        <div class="info-row">
+                            <span>Strategy</span>
+                            <span id="ai-strategy">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span>Risk</span>
+                            <span id="ai-risk">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span>Nivel</span>
+                            <span id="ai-level-badge">MEDIO</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="section-title">Posiciones abiertas</h3>
+                    <div id="positions" class="positions-grid"></div>
+                </div>
+
+                <div class="card">
+                    <h3>Alertas</h3>
+                    <div id="alerts"></div>
+                </div>
+
+                <div class="card">
+                    <h3>Decisiones IA</h3>
+                    <div id="decisions"></div>
+                </div>
+            </aside>
+        </main>
+
+        <section class="bottom-section">
+            <div class="card large equity-card">
+                <h3>Equity curve</h3>
+                <canvas id="equityChart"></canvas>
+            </div>
+
+            <div class="trades-split-grid">
+                <div class="card trade-card trade-summary-card">
+                    <h3>Resumen de trades</h3>
+                    <div id="trade-summary-list" class="trade-summary-list"></div>
+                </div>
+
+                <div class="card trade-card">
+                    <h3>Wins</h3>
+                    <div class="table-wrap">
+                        <table id="wins-table">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Result</th>
+                                    <th>PnL</th>
+                                    <th>Strategy</th>
+                                    <th>Fees</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card trade-card">
+                    <h3>Losses</h3>
+                    <div class="table-wrap">
+                        <table id="losses-table">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Result</th>
+                                    <th>PnL</th>
+                                    <th>Strategy</th>
+                                    <th>Fees</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </div>
-
-    <div class="controls">
-        <a href="/start"><button>Start</button></a>
-        <a href="/stop"><button>Stop</button></a>
-        <a href="/mode/demo"><button>Demo</button></a>
-        <a href="/mode/real"><button>Real</button></a>
-        <a href="/strategy/auto"><button>Auto</button></a>
-        <a href="/strategy/trend"><button>Trend</button></a>
-        <a href="/strategy/scalping"><button>Scalping</button></a>
-    </div>
-
-    <div class="panel">
-        <div class="panel-header">
-            <h2>🧠 Estado del sistema</h2>
-            <span class="small">Preparado para futura app</span>
-        </div>
-
-        <div class="system-grid">
-            <div class="system-item">
-                <span class="label">Bot</span>
-                <span class="value" id="system_bot_status">-</span>
-            </div>
-
-            <div class="system-item">
-                <span class="label">Modo</span>
-                <span class="value" id="system_mode">-</span>
-            </div>
-
-            <div class="system-item">
-                <span class="label">Estrategia</span>
-                <span class="value" id="system_strategy">-</span>
-            </div>
-
-            <div class="system-item">
-                <span class="label">Versión</span>
-                <span class="value" id="system_version">v2.0</span>
-            </div>
-
-            <div class="system-item">
-                <span class="label">Trades hoy</span>
-                <span class="value" id="system_daily_trades">-</span>
-            </div>
-
-            <div class="system-item">
-                <span class="label">Última actualización</span>
-                <span class="value" id="system_last_update">-</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="panel">
-        <div class="panel-header">
-            <h2>💼 Portfolio</h2>
-            <span class="small">Estado actual de la cuenta</span>
-        </div>
-
-        <div class="cards">
-            <div class="card">
-                <h3>Balance total</h3>
-                <p id="balance">0.00</p>
-            </div>
-
-            <div class="card">
-                <h3>Equity</h3>
-                <p id="equity">0.00</p>
-            </div>
-
-            <div class="card">
-                <h3>PnL flotante</h3>
-                <p id="floating_pnl">0.00</p>
-            </div>
-
-            <div class="card">
-                <h3>Exposición actual</h3>
-                <p id="risk_pct">0.00%</p>
-            </div>
-
-            <div class="card">
-                <h3>Riesgo total abierto</h3>
-                <p id="total_risk">0.00</p>
-            </div>
-
-            <div class="card">
-                <h3>Riesgo promedio/trade</h3>
-                <p id="avg_risk">0.00</p>
-            </div>
-
-            <div class="card">
-                <h3>Riesgo real %</h3>
-                <p id="risk_real_pct">0.00%</p>
-            </div>
-
-            <div class="card">
-                <h3>Balance libre</h3>
-                <p id="free_balance">0.00</p>
-            </div>
-
-            <div class="card">
-                <h3>Balance usado</h3>
-                <p id="used_balance">0.00</p>
-            </div>
-
-            <div class="card">
-                <h3>Posiciones abiertas</h3>
-                <p id="open_positions_count">0</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="panel">
-        <div class="panel-header">
-            <h2>📊 Performance</h2>
-            <span class="small">Métricas de rendimiento del bot</span>
-        </div>
-
-        <div class="cards">
-            <div class="card">
-                <h3>Trades</h3>
-                <p id="trades">0</p>
-            </div>
-
-            <div class="card">
-                <h3>Winrate</h3>
-                <p id="winrate">0%</p>
-            </div>
-
-            <div class="card">
-                <h3>Ganancias</h3>
-                <p id="profit">0.00</p>
-            </div>
-
-            <div class="card">
-                <h3>Pérdidas</h3>
-                <p id="loss">0.00</p>
-            </div>
-
-            <div class="card">
-                <h3>Resultado neto</h3>
-                <p id="net_result">0.00</p>
-            </div>
-
-            <div class="card">
-                <h3>Profit neto</h3>
-                <p id="net_profit">0.00</p>
-            </div>
-
-            <div class="card">
-                <h3>Profit por trade</h3>
-                <p id="avg_profit_per_trade">0.00</p>
-            </div>
-
-            <div class="card">
-                <h3>Max drawdown</h3>
-                <p id="max_drawdown">0.00%</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="panel">
-        <div class="panel-header">
-            <h2>📈 Equity Curve</h2>
-            <span class="small" id="equity_info">Historial de performance</span>
-        </div>
-        <canvas id="equityChart"></canvas>
-    </div>
-    
-    <div class="panel">
-        <div class="panel-header">
-            <h2>🕒 Rendimiento por hora</h2>
-            <span class="small">Trades y winrate por franja horaria</span>
-        </div>
-        <canvas id="hourChart"></canvas>
-    </div>
-
-    <div class="panel">
-        <div class="panel-header">
-            <h2>🌍 Rendimiento por sesión</h2>
-            <span class="small">Asia / Europa / USA</span>
-        </div>
-        <canvas id="sessionChart"></canvas>
-    </div>
-
-    <div class="panel">
-        <div class="panel-header">
-            <h2>📅 Rendimiento por día</h2>
-            <span class="small">Winrate y trades por día</span>
-        </div>
-        <canvas id="dayChart"></canvas>
-    </div>
-
-    <div class="grid-2">
-        <div class="panel">
-            <div class="panel-header">
-                <h2>📂 Posiciones abiertas</h2>
-                <span class="small" id="positions_count">0 posiciones</span>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Symbol</th>
-                        <th>Entry</th>
-                        <th>Actual</th>
-                        <th>Qty</th>
-                        <th>Capital</th>
-                        <th>PnL</th>
-                        <th>PnL %</th>
-                    </tr>
-                </thead>
-                <tbody id="positionsTable">
-                    <tr>
-                        <td colspan="7" class="muted">Sin posiciones</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="panel">
-            <div class="panel-header">
-                <h2>🧾 Últimos trades</h2>
-                <span class="small">Últimos 20 registros</span>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Symbol</th>
-                        <th>RSI</th>
-                        <th>Volume</th>
-                        <th>Trend</th>
-                        <th>Momentum</th>
-                        <th>Result</th>
-                        <th>PnL</th>
-                    </tr>
-                </thead>
-                <tbody id="tradesTable">
-                    <tr>
-                        <td colspan="7" class="muted">Sin trades</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="panel">
-        <div class="panel-header">
-            <h2>🚨 Alertas</h2>
-            <span class="small">Eventos y señales del sistema</span>
-        </div>
-        <div id="alertsList" class="alerts-list">
-            <div class="alert-empty">Sin alertas por ahora</div>
-        </div>
-    </div>
-
-<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 </html>

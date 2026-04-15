@@ -1,0 +1,103 @@
+2026-04-12 16:40:28 | BUY | PEPEUSDT | entry=0.000003 | qty=61324189.521343 | capital=213.41 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-12 16:40:36 | BUY | AVAXUSDT | entry=9.080000 | qty=18.802483 | capital=170.73 | strategy=mean_reversion | risk_mode=aggressive | tp=4.21% | sl=-2.00%
+2026-04-12 16:47:14 | BUY | DOGEUSDT | entry=0.091040 | qty=1500.233248 | capital=136.58 | strategy=mean_reversion | risk_mode=aggressive | tp=4.21% | sl=-2.00%
+2026-04-12 17:43:08 | SELL | PEPEUSDT | reason=time_exit | price=0.000003 | qty=61324189.521343 | pnl=1.2265 | pnl_net=0.7984 | profit_pct=0.57%time=62.7m
+2026-04-12 17:45:54 | SELL | DOGEUSDT | reason=time_exit | price=0.091480 | qty=1500.233248 | pnl=0.6601 | pnl_net=0.3863 | profit_pct=0.48%time=58.7m
+2026-04-12 17:46:28 | SELL | AVAXUSDT | reason=time_exit | price=9.130000 | qty=18.802483 | pnl=0.9401 | pnl_net=0.5977 | profit_pct=0.55%time=65.9m
+2026-04-12 17:49:06 | BUY | ZECUSDT | entry=366.820000 | qty=0.581779 | capital=213.41 | strategy=breakout | risk_mode=normal | tp=8.03% | sl=-2.00%
+2026-04-12 18:50:52 | SELL | ZECUSDT | reason=time_exit | price=364.060000 | qty=0.581779 | pnl=-1.6057 | pnl_net=-2.0309 | profit_pct=-0.75%time=61.8m
+2026-04-12 18:56:06 | BUY | TRXUSDT | entry=0.322100 | qty=662.55256 | capital=213.41 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-12 19:05:01 | BUY | BTCUSDT | entry=70735.200000 | qty=0.002414 | capital=170.73 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-12 19:05:03 | BUY | BNBUSDT | entry=592.200000 | qty=0.230634 | capital=136.58 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-12 20:26:50 | SELL | TRXUSDT | reason=time_exit | price=0.321900 | qty=662.552560 | pnl=-0.1325 | pnl_net=-0.5592 | profit_pct=-0.06%time=90.7m
+2026-04-12 20:37:42 | BUY | TRXUSDT | entry=0.321600 | qty=472.470845 | capital=151.95 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-12 20:38:20 | SELL | BTCUSDT | reason=time_exit | price=70639.650000 | qty=0.002414 | pnl=-0.2307 | pnl_net=-0.5719 | profit_pct=-0.14%time=93.3m
+2026-04-12 20:38:21 | SELL | BNBUSDT | reason=time_exit | price=591.130000 | qty=0.230634 | pnl=-0.2468 | pnl_net=-0.5197 | profit_pct=-0.18%time=93.3m
+2026-04-12 21:11:47 | BUY | ENJUSDT | entry=0.036340 | qty=5036.292096 | capital=183.02 | strategy=mean_reversion | risk_mode=conservative | tp=4.95% | sl=-2.00%
+2026-04-12 21:59:34 | SELL | ENJUSDT | reason=time_exit | price=0.036690 | qty=5036.292096 | pnl=1.7627 | pnl_net=1.3949 | profit_pct=0.96%time=47.8m
+2026-04-12 22:12:10 | SELL | TRXUSDT | reason=time_exit | price=0.321800 | qty=472.470845 | pnl=0.0945 | pnl_net=-0.2095 | profit_pct=0.06%time=94.5m
+2026-04-12 23:08:57 | BUY | TRXUSDT | entry=0.320900 | qty=665.030164 | capital=213.41 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-12 23:11:48 | BUY | ETHUSDT | entry=2198.070000 | qty=0.077671 | capital=170.73 | strategy=mean_reversion | risk_mode=aggressive | tp=4.21% | sl=-2.00%
+2026-04-12 23:43:03 | BUY | ADAUSDT | entry=0.237100 | qty=576.049072 | capital=136.58 | strategy=scalp | risk_mode=normal | tp=6.80% | sl=-2.00%
+2026-04-13 00:39:44 | SELL | TRXUSDT | reason=time_exit | price=0.320600 | qty=665.030164 | pnl=-0.1995 | pnl_net=-0.6261 | profit_pct=-0.09%time=90.8m
+2026-04-13 00:42:33 | SELL | ETHUSDT | reason=time_exit | price=2193.260000 | qty=0.077671 | pnl=-0.3736 | pnl_net=-0.7147 | profit_pct=-0.22%time=90.7m
+2026-04-13 00:45:25 | SELL | ADAUSDT | reason=time_exit | price=0.238100 | qty=576.049072 | pnl=0.5760 | pnl_net=0.3023 | profit_pct=0.42%time=62.4m
+2026-04-13 01:54:48 | BUY | XRPUSDT | entry=1.322700 | qty=161.342844 | capital=213.41 | strategy=scalp | risk_mode=normal | tp=6.80% | sl=-2.00%
+2026-04-13 01:54:55 | BUY | DOGEUSDT | entry=0.090970 | qty=1876.734568 | capital=170.73 | strategy=mean_reversion | risk_mode=conservative | tp=4.21% | sl=-2.00%
+2026-04-13 02:39:25 | BUY | TRXUSDT | entry=0.320300 | qty=426.416594 | capital=136.58 | strategy=scalp | risk_mode=normal | tp=6.80% | sl=-2.00%
+2026-04-13 02:48:45 | SELL | XRPUSDT | reason=time_exit | price=1.328600 | qty=161.342844 | pnl=0.9519 | pnl_net=0.5242 | profit_pct=0.45%time=54.0m
+2026-04-13 02:51:01 | BUY | ETHUSDT | entry=2188.050000 | qty=0.069444 | capital=151.95 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-13 03:03:13 | SELL | DOGEUSDT | reason=time_exit | price=0.091340 | qty=1876.734568 | pnl=0.6944 | pnl_net=0.3522 | profit_pct=0.41%time=68.3m
+2026-04-13 03:46:29 | SELL | ETHUSDT | reason=time_exit | price=2199.090000 | qty=0.069444 | pnl=0.7667 | pnl_net=0.4620 | profit_pct=0.50%time=55.5m
+2026-04-13 04:09:25 | SELL | TRXUSDT | reason=time_exit | price=0.320900 | qty=426.416594 | pnl=0.2558 | pnl_net=-0.0176 | profit_pct=0.19%time=90.0m
+2026-04-13 04:11:40 | BUY | BNBUSDT | entry=597.940000 | qty=0.356906 | capital=213.41 | strategy=mean_reversion | risk_mode=aggressive | tp=4.21% | sl=-2.00%
+2026-04-13 04:17:23 | BUY | ZECUSDT | entry=362.640000 | qty=0.470788 | capital=170.73 | strategy=mean_reversion | risk_mode=conservative | tp=4.21% | sl=-2.00%
+2026-04-13 04:20:17 | BUY | DASHUSDT | entry=41.500000 | qty=3.291114 | capital=136.58 | strategy=mean_reversion | risk_mode=conservative | tp=4.21% | sl=-2.00%
+2026-04-13 05:20:43 | SELL | ZECUSDT | reason=time_exit | price=359.640000 | qty=0.470788 | pnl=-1.4124 | pnl_net=-1.7524 | profit_pct=-0.83%time=63.3m
+2026-04-13 05:20:43 | SELL | DASHUSDT | reason=time_exit | price=41.010000 | qty=3.291114 | pnl=-1.6126 | pnl_net=-1.8842 | profit_pct=-1.18%time=60.4m
+2026-04-13 05:44:16 | SELL | BNBUSDT | reason=time_exit | price=595.790000 | qty=0.356906 | pnl=-0.7673 | pnl_net=-1.1934 | profit_pct=-0.36%time=92.6m
+2026-04-13 05:46:59 | BUY | ADAUSDT | entry=0.237800 | qty=897.427164 | capital=213.41 | strategy=trend | risk_mode=conservative | tp=6.38% | sl=-2.00%
+2026-04-13 05:50:03 | BUY | GIGGLEUSDT | entry=38.130000 | qty=4.477486 | capital=170.73 | strategy=mean_reversion | risk_mode=aggressive | tp=4.95% | sl=-2.00%
+2026-04-13 05:59:08 | BUY | NEARUSDT | entry=1.377000 | qty=99.187534 | capital=136.58 | strategy=mean_reversion | risk_mode=aggressive | tp=4.21% | sl=-2.00%
+2026-04-13 06:32:09 | SELL | ADAUSDT | reason=time_exit | price=0.238800 | qty=897.427164 | pnl=0.8974 | pnl_net=0.4697 | profit_pct=0.42%time=45.2m
+2026-04-13 06:34:52 | BUY | PAXGUSDT | entry=4697.900000 | qty=0.032344 | capital=151.95 | strategy=mean_reversion | risk_mode=conservative | tp=4.21% | sl=-2.00%
+2026-04-13 06:35:33 | SELL | GIGGLEUSDT | reason=time_exit | price=38.540000 | qty=4.477486 | pnl=1.8358 | pnl_net=1.4925 | profit_pct=1.08%time=45.5m
+2026-04-13 06:45:01 | BUY | DOTUSDT | entry=1.173000 | qty=132.738796 | capital=155.70 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-13 06:45:42 | SELL | NEARUSDT | reason=time_exit | price=1.391000 | qty=99.187534 | pnl=1.3886 | pnl_net=1.1141 | profit_pct=1.02%time=46.6m
+2026-04-13 07:05:15 | BUY | JSTUSDT | entry=0.077510 | qty=1959.467594 | capital=151.88 | strategy=mean_reversion | risk_mode=conservative | tp=4.95% | sl=-2.00%
+2026-04-13 07:48:13 | SELL | DOTUSDT | reason=time_exit | price=1.164000 | qty=132.738796 | pnl=-1.1946 | pnl_net=-1.5049 | profit_pct=-0.77%time=63.2m
+2026-04-13 07:51:01 | BUY | TRXUSDT | entry=0.321600 | qty=474.636779 | capital=152.64 | strategy=mean_reversion | risk_mode=conservative | tp=4.21% | sl=-2.00%
+2026-04-13 07:51:09 | SELL | JSTUSDT | reason=time_exit | price=0.077890 | qty=1959.467594 | pnl=0.7446 | pnl_net=0.4401 | profit_pct=0.49%time=45.9m
+2026-04-13 07:57:51 | BUY | JSTUSDT | entry=0.078520 | qty=1942.055746 | capital=152.49 | strategy=trend | risk_mode=normal | tp=6.38% | sl=-2.00%
+2026-04-13 08:05:13 | SELL | PAXGUSDT | reason=time_exit | price=4709.340000 | qty=0.032344 | pnl=0.3700 | pnl_net=0.0658 | profit_pct=0.24%time=90.4m
+2026-04-13 08:14:38 | BUY | BARDUSDT | entry=0.330700 | qty=460.784695 | capital=152.38 | strategy=mean_reversion | risk_mode=conservative | tp=4.21% | sl=-2.00%
+2026-04-13 08:59:04 | SELL | JSTUSDT | reason=time_exit | price=0.077820 | qty=1942.055746 | pnl=-1.3594 | pnl_net=-1.6631 | profit_pct=-0.89%time=61.2m
+2026-04-13 09:01:48 | BUY | ENJUSDT | entry=0.040510 | qty=3762.114101 | capital=152.40 | strategy=mean_reversion | risk_mode=aggressive | tp=5.69% | sl=-2.00%
+2026-04-13 09:23:03 | SELL | TRXUSDT | reason=time_exit | price=0.321600 | qty=474.636779 | pnl=0.0000 | pnl_net=-0.3053 | profit_pct=0.00%time=92.0m
+2026-04-13 09:36:26 | BUY | ZECUSDT | entry=360.480000 | qty=0.422912 | capital=152.45 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-13 09:40:29 | SELL | ENJUSDT | reason=stop_loss | price=0.039610 | qty=3762.114101 | pnl=-3.3859 | pnl_net=-3.6873 | profit_pct=-2.22%time=38.7m
+2026-04-13 09:43:23 | BUY | TAOUSDT | entry=260.100000 | qty=0.586089 | capital=152.44 | strategy=mean_reversion | risk_mode=aggressive | tp=4.21% | sl=-2.00%
+2026-04-13 09:47:21 | SELL | BARDUSDT | reason=time_exit | price=0.330500 | qty=460.784695 | pnl=-0.0922 | pnl_net=-0.3968 | profit_pct=-0.06%time=92.7m
+2026-04-13 09:50:05 | BUY | TRXUSDT | entry=0.320900 | qty=475.006564 | capital=152.43 | strategy=mean_reversion | risk_mode=conservative | tp=4.21% | sl=-2.00%
+2026-04-13 10:24:45 | SELL | ZECUSDT | reason=time_exit | price=368.790000 | qty=0.422912 | pnl=3.5144 | pnl_net=3.2060 | profit_pct=2.31%time=48.3m
+2026-04-13 10:31:33 | SELL | TAOUSDT | reason=time_exit | price=262.400000 | qty=0.586089 | pnl=1.3480 | pnl_net=1.0418 | profit_pct=0.88%time=48.2m
+2026-04-13 10:44:14 | BUY | BARDUSDT | entry=0.327100 | qty=559.224268 | capital=182.92 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-13 11:21:40 | SELL | TRXUSDT | reason=time_exit | price=0.320400 | qty=475.006564 | pnl=-0.2375 | pnl_net=-0.5421 | profit_pct=-0.16%time=91.6m
+2026-04-13 11:31:45 | SELL | BARDUSDT | reason=time_exit | price=0.330700 | qty=559.224268 | pnl=2.0132 | pnl_net=1.6453 | profit_pct=1.10%time=47.5m
+2026-04-13 11:55:35 | BUY | ZECUSDT | entry=359.940000 | qty=0.592899 | capital=213.41 | strategy=mean_reversion | risk_mode=conservative | tp=4.21% | sl=-2.00%
+2026-04-13 11:59:26 | BUY | PAXGUSDT | entry=4699.980000 | qty=0.036325 | capital=170.73 | strategy=mean_reversion | risk_mode=conservative | tp=4.21% | sl=-2.00%
+2026-04-13 11:59:30 | BUY | UUSDT | entry=0.999500 | qty=136.64956 | capital=136.58 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-13 12:07:01 | SELL | ZECUSDT | reason=stop_loss | price=352.490000 | qty=0.592899 | pnl=-4.4171 | pnl_net=-4.8395 | profit_pct=-2.07%time=11.4m
+2026-04-13 12:10:39 | BUY | ZECUSDT | entry=351.820000 | qty=0.431887 | capital=151.95 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-13 12:38:00 | SELL | ZECUSDT | reason=stop_loss | price=343.630000 | qty=0.431887 | pnl=-3.5372 | pnl_net=-3.8375 | profit_pct=-2.33%time=27.4m
+2026-04-13 12:38:02 | BUY | TAOUSDT | entry=254.100000 | qty=0.59798 | capital=151.95 | strategy=mean_reversion | risk_mode=conservative | tp=4.21% | sl=-2.00%
+2026-04-13 13:32:02 | SELL | PAXGUSDT | reason=time_exit | price=4716.350000 | qty=0.036325 | pnl=0.5946 | pnl_net=0.2526 | profit_pct=0.35%time=92.6m
+2026-04-13 13:32:03 | SELL | UUSDT | reason=time_exit | price=0.999600 | qty=136.649560 | pnl=0.0137 | pnl_net=-0.2595 | profit_pct=0.01%time=92.5m
+2026-04-13 13:34:56 | BUY | ENJUSDT | entry=0.041970 | qty=4360.706571 | capital=183.02 | strategy=mean_reversion | risk_mode=conservative | tp=5.69% | sl=-2.00%
+2026-04-13 13:35:00 | SELL | TAOUSDT | reason=time_exit | price=255.600000 | qty=0.597980 | pnl=0.8970 | pnl_net=0.5922 | profit_pct=0.59%time=57.0m
+2026-04-13 13:38:27 | BUY | GIGGLEUSDT | entry=37.200000 | qty=4.752807 | capital=176.80 | strategy=mean_reversion | risk_mode=conservative | tp=5.69% | sl=-2.00%
+2026-04-13 14:08:53 | PARTIAL SELL | GIGGLEUSDT | price=38.540000 | qty=2.376403 | profit_pct=3.60%
+2026-04-13 14:22:39 | BUY | BROCCOLI714USDT | entry=0.016580 | qty=9597.344253 | capital=159.12 | strategy=mean_reversion | risk_mode=aggressive | tp=5.69% | sl=-2.00%
+2026-04-13 14:23:20 | SELL | ENJUSDT | reason=time_exit | price=0.042300 | qty=4360.706571 | pnl=1.4390 | pnl_net=1.0716 | profit_pct=0.79%time=48.4m
+2026-04-13 14:26:47 | SELL | GIGGLEUSDT | reason=time_exit | price=37.920000 | qty=2.376403 | pnl=1.7110 | pnl_net=1.5325 | profit_pct=1.94%time=48.3m
+2026-04-13 14:26:47 | SELL | BROCCOLI714USDT | reason=stop_loss | price=0.016230 | qty=9597.344253 | pnl=-3.3591 | pnl_net=-3.6740 | profit_pct=-2.11%time=4.1m
+2026-04-13 14:29:41 | BUY | BROCCOLI714USDT | entry=0.016000 | qty=13338.011221 | capital=213.41 | strategy=mean_reversion | risk_mode=aggressive | tp=5.69% | sl=-2.00%
+2026-04-13 14:33:28 | BUY | ETHUSDT | entry=2237.400000 | qty=0.076306 | capital=170.73 | strategy=breakout | risk_mode=normal | tp=8.03% | sl=-2.00%
+2026-04-13 14:33:30 | BUY | LINKUSDT | entry=8.940000 | qty=15.277543 | capital=136.58 | strategy=breakout | risk_mode=normal | tp=8.03% | sl=-2.00%
+2026-04-13 15:23:51 | SELL | BROCCOLI714USDT | reason=time_exit | price=0.016070 | qty=13338.011221 | pnl=0.9337 | pnl_net=0.5059 | profit_pct=0.44%time=54.2m
+2026-04-13 15:26:37 | BUY | DASHUSDT | entry=40.000000 | qty=3.798666 | capital=151.95 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-13 15:34:09 | SELL | LINKUSDT | reason=time_exit | price=8.870000 | qty=15.277543 | pnl=-1.0694 | pnl_net=-1.3415 | profit_pct=-0.78%time=60.7m
+2026-04-13 15:37:04 | BUY | SUIUSDT | entry=0.916400 | qty=162.454764 | capital=148.87 | strategy=trend | risk_mode=conservative | tp=6.38% | sl=-2.00%
+2026-04-13 16:05:42 | SELL | ETHUSDT | reason=time_exit | price=2230.120000 | qty=0.076306 | pnl=-0.5555 | pnl_net=-0.8964 | profit_pct=-0.33%time=92.2m
+2026-04-13 16:16:40 | SELL | DASHUSDT | reason=time_exit | price=40.180000 | qty=3.798666 | pnl=0.6838 | pnl_net=0.3792 | profit_pct=0.45%time=50.1m
+2026-04-13 16:19:42 | BUY | BTCUSDT | entry=72533.090000 | qty=0.002532 | capital=183.63 | strategy=breakout | risk_mode=normal | tp=8.03% | sl=-2.00%
+2026-04-13 16:19:44 | BUY | LINKUSDT | entry=8.910000 | qty=16.487854 | capital=146.91 | strategy=breakout | risk_mode=normal | tp=8.03% | sl=-2.00%
+2026-04-13 16:24:17 | SELL | SUIUSDT | reason=time_exit | price=0.925700 | qty=162.454764 | pnl=1.5108 | pnl_net=1.2116 | profit_pct=1.01%time=47.2m
+2026-04-13 16:48:48 | BUY | XRPUSDT | entry=1.352100 | qty=108.941743 | capital=147.30 | strategy=breakout | risk_mode=normal | tp=8.03% | sl=-2.00%
+2026-04-13 17:06:59 | SELL | BTCUSDT | reason=time_exit | price=73258.380000 | qty=0.002532 | pnl=1.8364 | pnl_net=1.4673 | profit_pct=1.00%time=47.3m
+2026-04-13 17:07:04 | SELL | LINKUSDT | reason=time_exit | price=8.990000 | qty=16.487854 | pnl=1.3190 | pnl_net=1.0239 | profit_pct=0.90%time=47.3m
+2026-04-13 17:36:18 | BUY | TAOUSDT | entry=254.400000 | qty=0.723067 | capital=183.95 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-13 17:40:34 | BUY | AVAXUSDT | entry=9.290000 | qty=15.84053 | capital=147.16 | strategy=mean_reversion | risk_mode=conservative | tp=4.21% | sl=-2.00%
+2026-04-13 18:05:20 | SELL | XRPUSDT | reason=time_exit | price=1.345200 | qty=108.941743 | pnl=-0.7517 | pnl_net=-1.0455 | profit_pct=-0.51%time=76.5m
+2026-04-13 18:23:31 | SELL | TAOUSDT | reason=time_exit | price=256.700000 | qty=0.723067 | pnl=1.6631 | pnl_net=1.2935 | profit_pct=0.90%time=47.2m
+2026-04-13 18:54:44 | SELL | AVAXUSDT | reason=time_exit | price=9.330000 | qty=15.840530 | pnl=0.6336 | pnl_net=0.3387 | profit_pct=0.43%time=74.2m
