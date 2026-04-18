@@ -2,7 +2,7 @@ import time
 import holidays
 import re
 from datetime import datetime, timezone, timedelta, date
-
+from services.daily_snapshot_service import upsert_today_snapshot
 from risk_manager import (
     check_limits,
     register_trade,
@@ -42,7 +42,10 @@ from ai_auto_trainer import maybe_retrain
 from ai_strategy_learner import suggest_context_decision
 from services.dashboard_service import add_last_decision
 from logger import log, log_order
+from services.daily_stats_service import save_daily_stats_json
+from AI import TradePredictionManager
 
+prediction_manager = TradePredictionManager()
 
 # =========================
 # HOLIDAYS
@@ -548,6 +551,9 @@ def process_symbol(symbol):
             f"conf={signal_confidence:.2f}"
         )
 
+        # =========================
+        # IA VIEJA -> DECISIÓN REAL
+        # =========================
         ai_decision = predict_trade({
             "rsi": rsi,
             "volume": vol_ratio,
@@ -562,6 +568,61 @@ def process_symbol(symbol):
             "liquidity_mode": liquidity_mode,
             "ai_context_risk": ia_risk,
         })
+
+        # =========================
+        # IA NUEVA -> MODO SOMBRA (SOLO OBSERVA)
+        # =========================
+        shadow_prediction = ""
+        prob_live = ""
+        prob_historical = ""
+        prob_final = ""
+        decision_source = ""
+        models_agree = ""
+
+        try:
+            shadow_result = prediction_manager.predict({
+                "rsi": rsi,
+                "volume": vol_ratio,
+                "trend": int(price > ma50),
+                "momentum": price - ma50,
+                "hour": now_dt.hour,
+                "day_of_week": now_dt.weekday(),
+                "signal_confidence": signal_confidence,
+                "market_regime": market_regime,
+                "atr": atr,
+                "volatility_context": volatility_context,
+                "liquidity_mode": liquidity_mode,
+                "ai_context_risk": ia_risk,
+            })
+
+            shadow_prediction = int(shadow_result.get("prediction", 0))
+            prob_live = float(
+                shadow_result.get("live_result", {}).get("probability_win", 0.0)
+            )
+            prob_historical = float(
+                shadow_result.get("historical_result", {}).get("probability_win", 0.0)
+            )
+            prob_final = float(shadow_result.get("probability_win", 0.0))
+            decision_source = str(shadow_result.get("manager_mode", "unknown"))
+
+            live_pred = shadow_result.get("live_result", {}).get("prediction")
+            hist_pred = shadow_result.get("historical_result", {}).get("prediction")
+            models_agree = int(
+                live_pred is not None and hist_pred is not None and live_pred == hist_pred
+            )
+
+            log(
+                f"👁 IA SOMBRA | {symbol} | "
+                f"shadow_pred={shadow_prediction} | "
+                f"prob_live={prob_live:.4f} | "
+                f"prob_hist={prob_historical:.4f} | "
+                f"prob_final={prob_final:.4f} | "
+                f"source={decision_source} | "
+                f"agree={models_agree}"
+            )
+
+        except Exception as e:
+            log(f"⚠ IA sombra error {symbol}: {e}")
 
         system_winrate = get_winrate()
         total_closed_trades = get_total_closed_trades()
@@ -613,11 +674,25 @@ def process_symbol(symbol):
         risk_mode = trade_context["risk_mode_final"]
         required_conf = get_required_confidence(strategy_name)
 
+        if market_regime == "sideways":
+            required_conf = max(required_conf, 0.80)
+
+        if market_regime == "sideways" and atr_pct < 1.2:
+            log(f"⚠ {symbol} skip sideways sin rango | atr_pct={atr_pct:.2f}%")
+            add_last_decision(
+                symbol,
+                "SKIP",
+                signal_confidence,
+                liquidity_mode,
+                f"sideways_low_range:{strategy_name}"
+            )
+            return
+
+        exceptional_setup = recovery or trend_change or bearish_rebound
+
         should_buy = (
             (signal_type == "BUY" and signal_confidence >= required_conf)
-            or recovery
-            or trend_change
-            or bearish_rebound
+            or (exceptional_setup and signal_confidence >= required_conf)
         )
 
         if not should_buy:
@@ -627,9 +702,7 @@ def process_symbol(symbol):
                 f"conf={signal_confidence:.2f} | "
                 f"required={required_conf:.2f} | "
                 f"strategy={strategy_name} | "
-                f"recovery={recovery} | "
-                f"trend_change={trend_change} | "
-                f"bearish_rebound={bearish_rebound}"
+                f"exceptional={exceptional_setup}"
             )
             add_last_decision(
                 symbol,
@@ -665,7 +738,8 @@ def process_symbol(symbol):
                     add_last_decision(symbol, "SKIP", signal_confidence, liquidity_mode, f"low_winrate:{strategy_name}")
                     return
 
-            stop_loss_price = price * (1 + BEST_SL)
+            sl_pct = abs(BEST_SL)
+            stop_loss_price = price * (1 - sl_pct)
 
             risk_per_trade_used = RISK_PER_TRADE
             if risk_mode == "conservative":
@@ -739,6 +813,7 @@ def process_symbol(symbol):
                 f"strategy={strategy_name} | "
                 f"tp_dynamic={tp_pct*100:.2f}%"
             )
+
             log_order(
                 f"BUY | {symbol} | "
                 f"entry={price:.6f} | "
@@ -747,8 +822,7 @@ def process_symbol(symbol):
                 f"strategy={strategy_name} | "
                 f"risk_mode={risk_mode} | "
                 f"tp={tp_pct*100:.2f}% | "
-                f"sl={BEST_SL*100:.2f}%"
-                
+                f"sl={-sl_pct*100:.2f}%"
             )
 
             now_ts = int(now_dt.timestamp())
@@ -771,33 +845,43 @@ def process_symbol(symbol):
                 "atr": atr,
                 "volatility_context": volatility_context,
                 "market_session": market_session,
-
                 "is_holiday_us": holiday_flags["is_holiday_us"],
                 "holiday_name_us": us_holidays.get(today, ""),
-
                 "is_holiday_ar": holiday_flags["is_holiday_ar"],
                 "holiday_name_ar": ar_holidays.get(today, ""),
-
                 "is_holiday_eu": holiday_flags["is_holiday_eu"],
                 "holiday_name_eu": uk_holidays.get(today, "") or de_holidays.get(today, ""),
-
                 "is_holiday_asia": holiday_flags["is_holiday_asia"],
                 "holiday_name_asia": (
                     jp_holidays.get(today, "") or
                     cn_holidays.get(today, "") or
                     kr_holidays.get(today, "")
                 ),
-
                 "is_good_friday": holiday_flags["is_good_friday"],
-
                 "liquidity_mode": liquidity_mode,
+
+                # IA VIEJA (DECISIÓN OFICIAL)
                 "ai_trade_decision": ai_decision,
+
+                # IA NUEVA (MODO SOMBRA)
+                "shadow_prediction": shadow_prediction,
+                "prob_live": prob_live,
+                "prob_historical": prob_historical,
+                "prob_final": prob_final,
+                "decision_source": decision_source,
+                "models_agree": models_agree,
+
                 "ai_context_risk": ia_risk or "",
                 "trade_filter_reason": trade_context["reason"],
-
                 "dataset_version": "live_ai_risk_v3",
                 "risk_per_trade_used": risk_per_trade_used,
             })
+
+            try:
+                save_daily_stats_json()
+                log(f"📊 daily_stats.json actualizado | {symbol}")
+            except Exception as e:
+                log(f"⚠ Error actualizando daily stats: {e}")
 
             if mode == "real":
                 log_order(f"REAL BUY | {symbol} | qty={quantity}")
@@ -814,7 +898,6 @@ def process_symbol(symbol):
             )
 
 
-
  # =========================
         # SELL
  # =========================
@@ -828,6 +911,9 @@ def process_symbol(symbol):
                 log(f"⚠ {symbol} posición no encontrada")
                 return
 
+            # =========================
+            # 📊 DATOS BASE
+            # =========================
             entry = float(pos["entry_price"])
             quantity = float(pos["quantity"])
             capital = float(pos.get("capital", entry * quantity))
@@ -838,26 +924,23 @@ def process_symbol(symbol):
 
             profit_pct = (price - entry) / entry if entry > 0 else 0
 
-            # =========================
-            # ⏱ TIEMPO EN TRADE
-            # =========================
-            time_in_trade = 0
+            time_in_trade_min = 0
             if open_time:
-                time_in_trade = time.time() - float(open_time)
+                time_in_trade_min = (time.time() - float(open_time)) / 60.0
 
-            time_in_trade_min = time_in_trade / 60
+            tp_pct = pos.get("tp_pct") or BEST_TP
 
             # =========================
             # 💰 PARTIAL TP
             # =========================
             if profit_pct >= 0.035 and not partial_done:
-                partial_qty = quantity * 0.5
-                partial_capital = capital * 0.5
+                partial_pct = 0.50
+                partial_qty = quantity * partial_pct
+                partial_capital = capital * partial_pct
 
                 log_order(
                     f"PARTIAL SELL | {symbol} | "
-                    f"price={price:.6f} | "
-                    f"qty={partial_qty:.6f} | "
+                    f"price={price:.6f} | qty={partial_qty:.6f} | "
                     f"profit_pct={profit_pct*100:.2f}%"
                 )
 
@@ -881,88 +964,342 @@ def process_symbol(symbol):
                 current_min = float(pos.get("min_price", entry))
                 partial_done = bool(pos.get("partial_tp_done", False))
                 open_time = pos.get("open_time")
+
                 profit_pct = (price - entry) / entry if entry > 0 else 0
+                time_in_trade_min = 0
+                if open_time:
+                    time_in_trade_min = (time.time() - float(open_time)) / 60.0
 
             # =========================
-            # 🧠 TP dinámico REAL
+            # 📈 VARIABLES DE CONTROL
             # =========================
-            tp_pct = pos.get("tp_pct")
-            if not tp_pct:
-                tp_pct = BEST_TP
+            progress = profit_pct / tp_pct if tp_pct > 0 else 0
+            range_pct = (current_max - entry) / entry if entry > 0 else 0
 
-            # =========================
-            # 🛡 BREAK EVEN SI YA HIZO PARCIAL
-            # =========================
-            effective_sl = BEST_SL
-            if partial_done and profit_pct > 0:
-                effective_sl = max(BEST_SL, -0.001)
-
-            # =========================
-            # ⏱ SALIDA POR TIEMPO
-            # =========================
-            time_exit = False
-            # pérdida moderada temprana
-            if time_in_trade_min > 30 and profit_pct < -0.01:
-                time_exit = True
-                log(f"⏱ EARLY LOSS CUT | {symbol}")
-
-            # pérdida leve prolongada
-            if time_in_trade_min > 90 and profit_pct < -0.005:
-                time_exit = True
-                log(f"⏱ TIME EXIT SMALL LOSS | {symbol}")
-
-            # trade muerto total
-            elif time_in_trade_min > 120:
-                time_exit = True
-                log(f"⏱ FORCE EXIT DEAD TRADE | {symbol}")
-
-            # =========================
-            # DEBUG
-            # =========================
             log(
-                f"DEBUG SELL | {symbol} | "
-                f"entry={entry:.6f} | "
-                f"price={price:.6f} | "
+                f"DEBUG VARS | {symbol} | "
                 f"profit_pct={profit_pct*100:.2f}% | "
-                f"BEST_SL={BEST_SL*100:.2f}% | "
                 f"tp_pct={tp_pct*100:.2f}% | "
-                f"time_in_trade_min={time_in_trade_min:.1f} | "
+                f"progress={progress:.2f} | "
+                f"time_in_trade={time_in_trade_min:.1f}min | "
+                f"range_pct={range_pct*100:.2f}% | "
                 f"partial_done={partial_done}"
             )
 
-            trailing_exit = update_trailing(symbol, price, atr, volatility_context, entry)
-            tp_exit = profit_pct >= tp_pct
-            sl_exit = profit_pct <= effective_sl
+            # =========================
+            # 🎯 EVALUACIÓN DE SALIDAS
+            # =========================
+            should_close = False
+            close_reason = ""
+            exit_type = ""
 
-            log(
-                f"DEBUG FLAGS | {symbol} | "
-                f"trailing_exit={trailing_exit} | "
-                f"tp_exit={tp_exit} | "
-                f"sl_exit={sl_exit} | "
-                f"time_exit={time_exit} | "
-                f"effective_sl={effective_sl*100:.2f}%"
-            )
+            # -------------------------------------------------
+            # 0. FAST LOSS PROTECTION
+            # -------------------------------------------------
+            if not should_close and not partial_done and time_in_trade_min <= 15:
+                fast_loss_thresholds = {
+                    "low": -0.012,
+                    "medium": -0.015,
+                    "high": -0.020,
+                }
+                fast_loss_limit = fast_loss_thresholds.get(volatility_context, -0.015)
+
+                if profit_pct < fast_loss_limit:
+                    should_close = True
+                    close_reason = f"fast_loss_{volatility_context}_{fast_loss_limit*100:.1f}%"
+                    exit_type = "FAST_SL"
+                    log(
+                        f"🚨 EXIT TRIGGER: FAST LOSS | {symbol} | "
+                        f"profit={profit_pct*100:.2f}% | "
+                        f"time={time_in_trade_min:.1f}min | "
+                        f"vol={volatility_context} | "
+                        f"limit={fast_loss_limit*100:.1f}%"
+                    )
+
+            # -------------------------------------------------
+            # 1. STOP LOSS
+            # -------------------------------------------------
+            effective_sl = float(BEST_SL)
+
+            if partial_done:
+                if profit_pct > 0.03:
+                    effective_sl = 0.005      # +0.5%
+                elif profit_pct > 0:
+                    effective_sl = -0.005     # -0.5%
+                else:
+                    effective_sl = BEST_SL * 0.5
+
+            if not should_close and profit_pct <= effective_sl:
+                should_close = True
+                close_reason = f"stop_loss_{effective_sl*100:.2f}%"
+                exit_type = "SL"
+                log(
+                    f"🛑 EXIT TRIGGER: SL | {symbol} | "
+                    f"profit={profit_pct*100:.2f}% | "
+                    f"sl_level={effective_sl*100:.2f}%"
+                )
+
+            # -------------------------------------------------
+            # 2. TRAILING STOP
+            # -------------------------------------------------
+            if not should_close:
+                if symbol not in trailing_data:
+                    trailing_data[symbol] = {"max_price": price, "current_stop": None}
+
+                if price > trailing_data[symbol]["max_price"]:
+                    trailing_data[symbol]["max_price"] = price
+
+                max_price = trailing_data[symbol]["max_price"]
+
+                if profit_pct >= 0.015:
+                    multipliers = {
+                        "low": 1.5,
+                        "medium": 2.0,
+                        "high": 3.0,
+                    }
+                    multiplier = multipliers.get(volatility_context, 2.0)
+
+                    if partial_done:
+                        multiplier *= 1.3
+
+                    trailing_stop = max_price - (atr * multiplier)
+
+                    log(
+                        f"DEBUG TRAILING | {symbol} | "
+                        f"max_price={max_price:.6f} | "
+                        f"trailing_stop={trailing_stop:.6f} | "
+                        f"current={price:.6f} | "
+                        f"multiplier={multiplier:.1f}"
+                    )
+
+                    if price <= trailing_stop:
+                        should_close = True
+                        close_reason = "trailing_stop"
+                        exit_type = "TRAILING"
+                        log(
+                            f"🛑 EXIT TRIGGER: TRAILING | {symbol} | "
+                            f"max_profit={(max_price-entry)/entry*100:.2f}% | "
+                            f"giveback={(max_price-price)/entry*100:.2f}%"
+                        )
+
+            # -------------------------------------------------
+            # 3. TAKE PROFIT
+            # -------------------------------------------------
+            if not should_close:
+                tp_hit = False
+                tp_reason = ""
+
+                if profit_pct >= tp_pct:
+                    if partial_done:
+                        if market_regime == "bull" and volatility_context != "high":
+                            extended_tp = tp_pct * 1.5
+                            if profit_pct >= extended_tp:
+                                tp_hit = True
+                                tp_reason = f"extended_tp_{extended_tp*100:.1f}%"
+                            else:
+                                log(
+                                    f"DEBUG TP | {symbol} | "
+                                    f"holding_for_extended={extended_tp*100:.1f}% | "
+                                    f"current={profit_pct*100:.2f}%"
+                                )
+                        else:
+                            tp_hit = True
+                            tp_reason = "tp_after_partial"
+                    else:
+                        tp_hit = True
+                        tp_reason = "standard_tp"
+
+                if tp_hit:
+                    should_close = True
+                    close_reason = tp_reason
+                    exit_type = "TP"
+                    log(
+                        f"🎯 EXIT TRIGGER: TP | {symbol} | "
+                        f"tp_pct={tp_pct*100:.2f}% | "
+                        f"achieved={profit_pct*100:.2f}% | "
+                        f"progress={progress:.2f}"
+                    )
+
+            # -------------------------------------------------
+            # 4. DEAD TRADE (más permisivo)
+            # -------------------------------------------------
+            if not should_close:
+                dead_conditions = 0
+                dead_reasons = []
+                dead_trade_exit = False
+
+                min_grace_period = 35
+
+                if time_in_trade_min < min_grace_period:
+                    log(
+                        f"DEBUG DEAD | {symbol} | "
+                        f"grace_period_active | time={time_in_trade_min:.1f}m"
+                    )
+                else:
+                    if profit_pct > 0.003:
+                        log(
+                            f"DEBUG DEAD | {symbol} | "
+                            f"profit_protect | profit={profit_pct:.3%} | NO EVALUAR"
+                        )
+                        dead_trade_exit = False
+
+                    elif profit_pct > 0:
+                        time_limits = {"bull": 120, "sideways": 90, "bear": 60}
+                        time_limit = time_limits.get(market_regime, 90)
+
+                        if time_in_trade_min > time_limit:
+                            dead_conditions += 1
+                            dead_reasons.append(f"flat_time>{time_limit}m")
+
+                        if progress < 0.02:
+                            dead_conditions += 1
+                            dead_reasons.append(f"extremely_slow<{progress:.2f}")
+
+                        min_expected_range = min(0.015, 0.005 * (time_in_trade_min / 30))
+                        if range_pct < min_expected_range:
+                            dead_conditions += 1
+                            dead_reasons.append(f"flat_range<{min_expected_range:.2%}")
+
+                        dead_trade_exit = dead_conditions >= 4
+
+                    else:
+                        time_limits = {"bull": 90, "sideways": 60, "bear": 45}
+                        time_limit = time_limits.get(market_regime, 60)
+
+                        if time_in_trade_min > time_limit:
+                            dead_conditions += 1
+                            dead_reasons.append(f"time>{time_limit}m")
+
+                        if profit_pct < -0.007:
+                            dead_conditions += 1
+                            dead_reasons.append("negative_progress")
+
+                        if profit_pct < -0.01:
+                            dead_conditions += 2
+                            dead_reasons.append(f"significant_loss>{profit_pct:.2%}")
+
+                        base_range = 0.01
+                        if volatility_context == "low":
+                            range_threshold = base_range * 0.5   # 0.5%
+                        elif volatility_context == "medium":
+                            range_threshold = base_range * 0.8   # 0.8%
+                        else:
+                            range_threshold = base_range * 1.2   # 1.2%
+
+                        if range_pct < range_threshold:
+                            dead_conditions += 1
+                            dead_reasons.append(f"range<{range_threshold:.2%}")
+
+                        if 'df' in locals() and df is not None and len(df) >= 10:
+                            recent_velocity = df['close'].pct_change().abs().iloc[-10:].mean()
+                            if recent_velocity < 0.0002:
+                                dead_conditions += 1
+                                dead_reasons.append(f"velocity<{recent_velocity:.4f}")
+
+                        dead_trade_exit = dead_conditions >= 4
+
+                log(
+                    f"DEBUG DEAD | {symbol} | "
+                    f"conditions={dead_conditions} | "
+                    f"details={dead_reasons if dead_reasons else 'none'} | "
+                    f"time={time_in_trade_min:.1f}m | "
+                    f"profit={profit_pct*100:.2f}% | "
+                    f"range={range_pct*100:.2f}% | "
+                    f"dead={dead_trade_exit}"
+                )
+
+                if dead_trade_exit:
+                    should_close = True
+                    close_reason = f"dead_trade:{','.join(dead_reasons)}"
+                    exit_type = "DEAD"
+                    log(
+                        f"☠ EXIT TRIGGER: DEAD TRADE | {symbol} | "
+                        f"time={time_in_trade_min:.1f}m | "
+                        f"profit={profit_pct*100:.2f}% | "
+                        f"progress={progress:.2f} | "
+                        f"range={range_pct*100:.2f}%"
+                    )
+
+            # -------------------------------------------------
+            # 5. TIME EXIT
+            # -------------------------------------------------
+            if not should_close:
+                time_hit = False
+                time_reason = ""
+
+                if profit_pct < 0.02:
+                    early_cut = {"bull": 45, "sideways": 30, "bear": 20}
+                    small_loss = {"bull": 120, "sideways": 90, "bear": 60}
+                    max_time = {"bull": 240, "sideways": 180, "bear": 120}
+
+                    if time_in_trade_min > early_cut.get(market_regime, 30) and profit_pct < -0.015:
+                        time_hit = True
+                        time_reason = f"early_cut_{market_regime}"
+                    elif time_in_trade_min > small_loss.get(market_regime, 90) and profit_pct < -0.008:
+                        time_hit = True
+                        time_reason = f"small_loss_{market_regime}"
+                    elif time_in_trade_min > max_time.get(market_regime, 180):
+                        time_hit = True
+                        time_reason = f"max_time_{market_regime}"
+
+                log(
+                    f"DEBUG TIME | {symbol} | "
+                    f"time={time_in_trade_min:.1f}min | "
+                    f"triggered={time_hit}"
+                )
+
+                # No cerrar por tiempo si ya tiene ganancia decente
+                if time_hit and profit_pct > 0.015:
+                    log(
+                        f"⏱ TIME EXIT CANCELADO | {symbol} | "
+                        f"profit={profit_pct*100:.2f}%"
+                    )
+                    time_hit = False
+                    time_reason = ""
+
+                if time_hit:
+                    should_close = True
+                    close_reason = time_reason
+                    exit_type = "TIME"
+                    log(
+                        f"⏱ EXIT TRIGGER: TIME | {symbol} | "
+                        f"reason={time_reason} | "
+                        f"final_profit={profit_pct*100:.2f}%"
+                    )
 
             # =========================
-            # 🎯 CONDICIÓN DE CIERRE
+            # 💰 FILTRO RENTABLE (MODO PRO)
             # =========================
-            should_close = (
-                trailing_exit
-                or tp_exit
-                or sl_exit
-                or time_exit
+            fee_buffer = 0.004  # 0.4%
+            min_real_profit = fee_buffer
+
+            force_close = (
+                exit_type in ["SL", "FAST_SL"]
+                or profit_pct < -0.01
             )
 
+            if should_close and not force_close:
+                if profit_pct < min_real_profit:
+                    log(
+                        f"⛔ BLOQUEO CIERRE | {symbol} | "
+                        f"profit={profit_pct*100:.2f}% < min_real={min_real_profit*100:.2f}% | "
+                        f"type={exit_type}"
+                    )
+                    should_close = False
+                    close_reason = ""
+                    exit_type = ""
+
+            # =========================
+            # 🔒 EJECUCIÓN DEL CIERRE
+            # =========================
             if should_close:
-                close_reason = "unknown"
-                if tp_exit:
-                    close_reason = "take_profit"
-                elif trailing_exit:
-                    close_reason = "trailing"
-                elif sl_exit:
-                    close_reason = "stop_loss"
-                elif time_exit:
-                    close_reason = "time_exit"
+                log(
+                    f"✅ EXECUTING CLOSE | {symbol} | "
+                    f"type={exit_type} | "
+                    f"reason={close_reason} | "
+                    f"profit={profit_pct*100:.2f}% | "
+                    f"time={time_in_trade_min:.1f}min"
+                )
 
                 pnl_real = close_position(symbol, price)
                 unlock_balance(capital, pnl_real)
@@ -980,15 +1317,19 @@ def process_symbol(symbol):
 
                 log(
                     f"🔒 CIERRE | {symbol} | "
+                    f"type={exit_type} | "
                     f"reason={close_reason} | "
                     f"pnl={pnl_real:.4f} | "
                     f"pnl_net={pnl_net:.4f} | "
                     f"profit_pct={profit_pct*100:.2f}% | "
-                    f"time={time_in_trade_min:.1f}min"
+                    f"time={time_in_trade_min:.1f}min | "
+                    f"MFE={mfe_pct:.2f}% | "
+                    f"MAE={mae_pct:.2f}%"
                 )
 
                 log_order(
                     f"SELL | {symbol} | "
+                    f"type={exit_type} | "
                     f"reason={close_reason} | "
                     f"price={price:.6f} | "
                     f"qty={quantity:.6f} | "
@@ -1016,9 +1357,20 @@ def process_symbol(symbol):
                     sell(symbol, quantity)
 
                 trailing_data.pop(symbol, None)
+                open_time_data.pop(symbol, None)
+
+            else:
+                log(
+                    f"⏸ HOLD | {symbol} | "
+                    f"profit={profit_pct*100:.2f}% | "
+                    f"progress={progress:.2f} | "
+                    f"time={time_in_trade_min:.1f}min"
+                )
 
         except Exception as e:
             log(f"❌ Error cerrando {symbol}: {e}")
+            import traceback
+            log(traceback.format_exc())
 # =========================
 # LOOP
 # =========================

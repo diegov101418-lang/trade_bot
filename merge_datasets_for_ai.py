@@ -34,6 +34,9 @@ DATASETS = [
     ("trades_dataset_v4.csv", "v4"),
     ("trades_dataset_v5.csv", "v5"),
     ("trades_dataset_v6.csv", "v6"),
+    ("trades_dataset_v7.csv", "v7"),
+    ("trades_dataset_v8.csv", "v8"),
+    
 ]
 
 OUTPUT_FILE = "trades_dataset_merged.csv"

@@ -148,7 +148,45 @@ document.addEventListener("DOMContentLoaded", () => {
             el.classList.add("flash-down");
         }
     }
-    
+    function setAnimatedBalance(value) {
+        const el = document.getElementById("balance");
+        if (!el) return;
+
+        const num = Number(value) || 0;
+        const previousRaw = el.dataset.prevValue;
+        const previous = previousRaw !== undefined ? Number(previousRaw) : null;
+
+        el.dataset.prevValue = num;
+
+        el.classList.remove("balance-up", "balance-down", "balance-idle");
+        void el.offsetWidth;
+
+        if (previous === null || Number.isNaN(previous)) {
+            el.innerText = num.toFixed(2);
+            el.classList.add("balance-idle");
+            return;
+        }
+
+        animateNumber(el, previous, num, {
+            duration: 700,
+            decimals: 2,
+            suffix: "",
+        });
+
+        if (num > previous) {
+            el.classList.add("balance-up");
+        } else if (num < previous) {
+            el.classList.add("balance-down");
+        } else {
+            el.classList.add("balance-idle");
+            return;
+        }
+
+        setTimeout(() => {
+            el.classList.remove("balance-up", "balance-down");
+            el.classList.add("balance-idle");
+        }, 1200);
+    }
 
     function clearPositionLines() {
         if (entryLine) {
@@ -611,15 +649,14 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await res.json();
 
             if (data.performance) {
-                setColoredValue("balance", data.performance.balance);
+                setAnimatedBalance(data.performance.balance);
                 setColoredValue("profit", data.performance.profit);
                 setColoredValue("loss", data.performance.loss);
                 setColoredValue("net-profit", data.performance.net_profit);
                 setColoredValue("avg-profit", data.performance.avg_profit_per_trade);
                 setColoredValue("drawdown", data.performance.max_drawdown, true);
 
-                setAnimatedText("wins", data.performance.wins ?? 0, "#22c55e");
-                setAnimatedText("losses", data.performance.losses ?? 0, "#ef4444");
+                
                 setAnimatedText("trades", data.performance.trades ?? 0, "#e5e7eb");
 
                 const winrate = Number(data.performance.winrate ?? 0);
@@ -696,6 +733,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 currentSymbol = "BTCUSDT";
                 selectedPositionSymbol = null;
             }
+            const totalWins = data.performance.wins ?? 0;
+            const totalLosses = data.performance.losses ?? 0;
+
+            const winsTitle = document.getElementById("wins-title");
+            const lossesTitle = document.getElementById("losses-title");
+
+            if (winsTitle) {
+                winsTitle.innerText = `WINS (${totalWins})`;
+            }
+
+            if (lossesTitle) {
+                lossesTitle.innerText = `LOSSES (${totalLosses})`;
+            }
+            winsTitle.innerHTML = `WINS <span style="opacity:0.6;">(${totalWins})</span>`;
+            lossesTitle.innerHTML = `LOSSES <span style="opacity:0.6;">(${totalLosses})</span>`;
 
             await loadChart(currentSymbol);
 
@@ -706,7 +758,8 @@ document.addEventListener("DOMContentLoaded", () => {
             renderAlerts(data.alerts || []);
             renderDecisions(data.last_decisions || []);
             await loadTodayStats();
-        } catch (err) {
+        } 
+        catch (err) {
             console.error("Error dashboard:", err);
         }
     }
@@ -735,7 +788,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const data = await res.json();
 
+        setAnimatedText("wins", data.wins ?? 0, "#22c55e");
+        setAnimatedText("losses", data.losses ?? 0, "#ef4444");
+
         setColoredValue("daily-net", data.pnl_net ?? 0);
+        setAnimatedText("daily-trades", data.trades ?? 0, "#e5e7eb");
 
     } catch (err) {
         console.error("Error today stats:", err);

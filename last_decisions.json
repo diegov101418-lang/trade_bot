@@ -1,107 +1,27 @@
 [
   {
-    "symbol": "RESOLVUSDT",
+    "symbol": "ONTUSDT",
     "decision": "SKIP",
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212939.6102505
+    "time": 1776469631.5619273
   },
   {
-    "symbol": "HUMAUSDT",
+    "symbol": "BNBUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "medium",
+    "reason": "no_signal",
+    "time": 1776469630.692523
+  },
+  {
+    "symbol": "MAVUSDT",
     "decision": "SKIP",
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212939.0090373
-  },
-  {
-    "symbol": "LISTAUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212938.415386
-  },
-  {
-    "symbol": "TNSRUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212937.8192072
-  },
-  {
-    "symbol": "PIVXUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212937.1972363
-  },
-  {
-    "symbol": "ADXUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212936.5978363
-  },
-  {
-    "symbol": "POLYUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212936.004193
-  },
-  {
-    "symbol": "TVKUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212935.401374
-  },
-  {
-    "symbol": "TOMOUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212934.7820196
-  },
-  {
-    "symbol": "COCOSUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212934.1873262
-  },
-  {
-    "symbol": "XRPUSDT",
-    "decision": "SKIP",
-    "confidence": 0.75,
-    "liquidity": "normal",
-    "reason": "ai_blocked_trade:breakout",
-    "time": 1776212933.5876532
-  },
-  {
-    "symbol": "ZKCUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212932.8559885
-  },
-  {
-    "symbol": "JTOUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212932.2559965
+    "time": 1776469629.9134562
   },
   {
     "symbol": "RDNTUSDT",
@@ -109,7 +29,71 @@
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212931.650538
+    "time": 1776469628.852826
+  },
+  {
+    "symbol": "GMTUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469626.7793365
+  },
+  {
+    "symbol": "JASMYUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469625.5133488
+  },
+  {
+    "symbol": "ENSUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469624.653029
+  },
+  {
+    "symbol": "FLOWUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469623.811083
+  },
+  {
+    "symbol": "LPTUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469622.960903
+  },
+  {
+    "symbol": "EGLDUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469622.1511483
+  },
+  {
+    "symbol": "LUNAUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469621.3213253
+  },
+  {
+    "symbol": "ZENUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469620.4348106
   },
   {
     "symbol": "GALUSDT",
@@ -117,47 +101,95 @@
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212931.043948
+    "time": 1776469619.6446695
   },
   {
-    "symbol": "ARUSDT",
+    "symbol": "SPELLUSDT",
     "decision": "SKIP",
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212750.3648844
+    "time": 1776469618.874858
   },
   {
-    "symbol": "RIFUSDT",
+    "symbol": "C98USDT",
     "decision": "SKIP",
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212749.774157
+    "time": 1776469618.070968
   },
   {
-    "symbol": "FILUSDT",
+    "symbol": "RDNTUSDT",
     "decision": "SKIP",
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212749.1742725
+    "time": 1776469346.7231226
   },
   {
-    "symbol": "AAVEUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "normal",
-    "reason": "no_signal",
-    "time": 1776212748.5716355
-  },
-  {
-    "symbol": "DOTUSDT",
+    "symbol": "HFTUSDT",
     "decision": "SKIP",
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212747.9600067
+    "time": 1776469345.873312
+  },
+  {
+    "symbol": "LDOUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469345.0316246
+  },
+  {
+    "symbol": "BIFIUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469344.266798
+  },
+  {
+    "symbol": "FLOWUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469343.4577274
+  },
+  {
+    "symbol": "PHAUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469342.6737106
+  },
+  {
+    "symbol": "CAKEUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469341.8546758
+  },
+  {
+    "symbol": "GRTUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469341.0586317
+  },
+  {
+    "symbol": "EGLDUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469340.2437906
   },
   {
     "symbol": "SANDUSDT",
@@ -165,71 +197,31 @@
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212747.35688
+    "time": 1776469339.4443653
   },
   {
-    "symbol": "JSTUSDT",
+    "symbol": "SNXUSDT",
     "decision": "SKIP",
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212746.754049
+    "time": 1776469338.6077206
   },
   {
-    "symbol": "SOLUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "normal",
-    "reason": "no_signal",
-    "time": 1776212746.1490483
-  },
-  {
-    "symbol": "TOMOUSDT",
+    "symbol": "VETUSDT",
     "decision": "SKIP",
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212745.5294814
+    "time": 1776469337.8239741
   },
   {
-    "symbol": "COCOSUSDT",
+    "symbol": "BERAUSDT",
     "decision": "SKIP",
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212744.917745
-  },
-  {
-    "symbol": "LINKUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "normal",
-    "reason": "no_signal",
-    "time": 1776212744.3121753
-  },
-  {
-    "symbol": "PIXELUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212743.6866314
-  },
-  {
-    "symbol": "RDNTUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212743.0777118
-  },
-  {
-    "symbol": "BELUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212742.4803965
+    "time": 1776469337.0166693
   },
   {
     "symbol": "GALUSDT",
@@ -237,7 +229,63 @@
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212741.8780265
+    "time": 1776469336.1159003
+  },
+  {
+    "symbol": "SPELLUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469335.264012
+  },
+  {
+    "symbol": "CKBUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469067.5302668
+  },
+  {
+    "symbol": "LUNAUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469066.5058868
+  },
+  {
+    "symbol": "TOMOUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469065.6956685
+  },
+  {
+    "symbol": "COCOSUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469065.0545998
+  },
+  {
+    "symbol": "THETAUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469064.4501536
+  },
+  {
+    "symbol": "ZECUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "medium",
+    "reason": "no_signal",
+    "time": 1776469063.8278208
   },
   {
     "symbol": "KITEUSDT",
@@ -245,103 +293,31 @@
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212559.689703
+    "time": 1776469063.1892068
   },
   {
-    "symbol": "ZBTUSDT",
+    "symbol": "XPLUSDT",
     "decision": "SKIP",
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212559.0667737
+    "time": 1776469062.5334346
   },
   {
-    "symbol": "YBUSDT",
+    "symbol": "HUMAUSDT",
     "decision": "SKIP",
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212558.4740102
+    "time": 1776469061.9162576
   },
   {
-    "symbol": "HOLOUSDT",
+    "symbol": "BIOUSDT",
     "decision": "SKIP",
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212557.861496
-  },
-  {
-    "symbol": "WLFIUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212557.258957
-  },
-  {
-    "symbol": "A2ZUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212556.6520023
-  },
-  {
-    "symbol": "MUBARAKUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212556.0498376
-  },
-  {
-    "symbol": "NEIROUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212555.3776817
-  },
-  {
-    "symbol": "POLYUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212554.760202
-  },
-  {
-    "symbol": "TVKUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212554.1599698
-  },
-  {
-    "symbol": "RIFUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212553.5621898
-  },
-  {
-    "symbol": "TOMOUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212552.9554327
-  },
-  {
-    "symbol": "COCOSUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212552.349308
+    "time": 1776469061.207665
   },
   {
     "symbol": "RDNTUSDT",
@@ -349,7 +325,31 @@
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212551.7544253
+    "time": 1776469060.1814985
+  },
+  {
+    "symbol": "AXSUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469059.43863
+  },
+  {
+    "symbol": "RSRUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_volume",
+    "time": 1776469058.7159698
+  },
+  {
+    "symbol": "ADAUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "medium",
+    "reason": "no_signal",
+    "time": 1776469057.9217727
   },
   {
     "symbol": "GALUSDT",
@@ -357,46 +357,46 @@
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212551.154364
+    "time": 1776469057.1878307
   },
   {
-    "symbol": "WIFUSDT",
+    "symbol": "TUTUSDT",
     "decision": "SKIP",
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212369.3464956
+    "time": 1776468788.4012601
   },
   {
-    "symbol": "ORDIUSDT",
+    "symbol": "TONUSDT",
+    "decision": "SKIP",
+    "confidence": 0.0,
+    "liquidity": "low",
+    "reason": "low_liquidity",
+    "time": 1776468787.766277
+  },
+  {
+    "symbol": "MAVUSDT",
     "decision": "SKIP",
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212368.74763
+    "time": 1776468787.1109517
   },
   {
-    "symbol": "ARKMUSDT",
+    "symbol": "HIGHUSDT",
     "decision": "SKIP",
     "confidence": 0.0,
     "liquidity": "low",
     "reason": "low_volume",
-    "time": 1776212368.1247165
+    "time": 1776468786.4643583
   },
   {
-    "symbol": "ALPINEUSDT",
+    "symbol": "RAREUSDT",
     "decision": "SKIP",
     "confidence": 0.0,
     "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212367.528016
-  },
-  {
-    "symbol": "ADXUSDT",
-    "decision": "SKIP",
-    "confidence": 0.0,
-    "liquidity": "low",
-    "reason": "low_volume",
-    "time": 1776212366.9319966
+    "reason": "low_liquidity",
+    "time": 1776468785.7859423
   }
 ]

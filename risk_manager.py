@@ -58,6 +58,11 @@ FIELDNAMES = [
     "ai_trade_decision",
     "ai_context_risk",
     "trade_filter_reason",
+        "prob_live",
+    "prob_historical",
+    "prob_final",
+    "decision_source",
+    "models_agree",
 ]
 
 
@@ -150,6 +155,11 @@ def register_trade(data=None):
         "ai_trade_decision": data.get("ai_trade_decision", ""),
         "ai_context_risk": data.get("ai_context_risk", ""),
         "trade_filter_reason": data.get("trade_filter_reason", ""),
+        "prob_live": data.get("prob_live", ""),
+        "prob_historical": data.get("prob_historical", ""),
+        "prob_final": data.get("prob_final", ""),
+        "decision_source": data.get("decision_source", ""),
+        "models_agree": data.get("models_agree", ""),
     }
 
     try:

@@ -6,6 +6,12 @@ from analysis_reports.holiday_analysis import analyze_holidays
 from analysis_reports.hour_analysis import analyze_by_hour
 from analysis_reports.day_analysis import analyze_by_day
 
+from services.daily_snapshot_service import (
+    load_daily_snapshots,
+    upsert_today_snapshot,
+    get_today_snapshot
+)
+
 from config import (
     is_running,
     set_running,
@@ -53,13 +59,13 @@ def api_chart(symbol):
             ma50_value = row.get("ma50")
             ma200_value = row.get("ma200")
 
-            if ma50_value == ma50_value:  # not NaN
+            if ma50_value == ma50_value:
                 ma50.append({
                     "time": ts,
                     "value": float(ma50_value),
                 })
 
-            if ma200_value == ma200_value:  # not NaN
+            if ma200_value == ma200_value:
                 ma200.append({
                     "time": ts,
                     "value": float(ma200_value),
@@ -75,6 +81,34 @@ def api_chart(symbol):
     })
 
 
+# =========================
+# DAILY SNAPSHOTS API
+# =========================
+@app.route("/api/snapshots/daily")
+def api_daily_snapshots():
+    try:
+        return jsonify(load_daily_snapshots())
+    except Exception as e:
+        print(f"⚠ Error en api_daily_snapshots: {e}")
+        return jsonify([])
+
+
+@app.route("/api/snapshots/daily/today")
+def api_today_snapshot():
+    try:
+        return jsonify(get_today_snapshot())
+    except Exception as e:
+        print(f"⚠ Error en api_today_snapshot: {e}")
+        return jsonify({}), 500
+
+
+@app.route("/api/snapshots/daily/update")
+def api_update_today_snapshot():
+    try:
+        return jsonify(upsert_today_snapshot())
+    except Exception as e:
+        print(f"⚠ Error en api_update_today_snapshot: {e}")
+        return jsonify({}), 500
 # =========================
 # DASHBOARD
 # =========================
