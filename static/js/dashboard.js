@@ -1,16 +1,18 @@
 document.addEventListener("DOMContentLoaded", () => {
     let currentSymbol = "BTCUSDT";
     let selectedPositionSymbol = null;
+    let selectedTrade = null;
 
     let entryLine = null;
     let stopLine = null;
     let tpLine = null;
+    let partialLine = null;
 
     const chartElement = document.getElementById("chart");
 
     const chart = LightweightCharts.createChart(chartElement, {
         width: chartElement.clientWidth,
-        height: 680,
+        height: 560,
         layout: {
             background: { color: "#0f172a" },
             textColor: "#d1d5db",
@@ -61,6 +63,14 @@ document.addEventListener("DOMContentLoaded", () => {
         lastValueVisible: false,
     });
 
+    const scaleHelperSeries = chart.addLineSeries({
+        color: "rgba(0,0,0,0)",
+        lineWidth: 1,
+        priceLineVisible: false,
+        lastValueVisible: false,
+        crosshairMarkerVisible: false,
+    });
+
     const toggleBot = document.getElementById("toggle-bot");
     const toggleMode = document.getElementById("toggle-mode");
     const aiLevelSelect = document.getElementById("ai-level");
@@ -90,7 +100,6 @@ document.addEventListener("DOMContentLoaded", () => {
             risk_limits: "Límite de riesgo",
             no_entry: "No cumple condiciones",
         };
-
         return map[reason] || reason;
     }
 
@@ -113,6 +122,73 @@ document.addEventListener("DOMContentLoaded", () => {
         else aiLevelBadge.style.color = "#ef4444";
     }
 
+    function animateNumber(el, from, to, options = {}) {
+        if (!el) return;
+
+        const {
+            duration = 450,
+            decimals = 2,
+            suffix = "",
+        } = options;
+
+        const start = performance.now();
+        const change = to - from;
+
+        function easeOutCubic(t) {
+            return 1 - Math.pow(1 - t, 3);
+        }
+
+        function frame(now) {
+            const elapsed = now - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = easeOutCubic(progress);
+
+            const current = from + change * eased;
+            el.innerText = current.toFixed(decimals) + suffix;
+
+            if (progress < 1) {
+                requestAnimationFrame(frame);
+            } else {
+                el.innerText = to.toFixed(decimals) + suffix;
+            }
+        }
+
+        requestAnimationFrame(frame);
+    }
+
+    function setAnimatedText(elementId, value, color = null, suffix = "") {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+
+        const num = Number(value) || 0;
+        const previousRaw = el.dataset.prevValue;
+        const previous = previousRaw !== undefined ? Number(previousRaw) : null;
+
+        el.dataset.prevValue = num;
+
+        if (color) {
+            el.style.color = color;
+        }
+
+        el.classList.remove("flash-up", "flash-down", "flash-neutral");
+        void el.offsetWidth;
+
+        if (previous === null || Number.isNaN(previous)) {
+            el.innerText = `${num}${suffix}`;
+            el.classList.add("flash-neutral");
+            return;
+        }
+
+        animateNumber(el, previous, num, {
+            duration: 400,
+            decimals: 0,
+            suffix,
+        });
+
+        if (num > previous) el.classList.add("flash-up");
+        else if (num < previous) el.classList.add("flash-down");
+    }
+
     function setColoredValue(elementId, value, isPercent = false) {
         const el = document.getElementById(elementId);
         if (!el) return;
@@ -131,7 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
         void el.offsetWidth;
 
         if (previous === null || Number.isNaN(previous)) {
-            el.innerText = isPercent ? num.toFixed(2) + "%" : num.toFixed(2);
+            el.innerText = isPercent ? `${num.toFixed(2)}%` : num.toFixed(2);
             el.classList.add("flash-neutral");
             return;
         }
@@ -142,12 +218,10 @@ document.addEventListener("DOMContentLoaded", () => {
             suffix: isPercent ? "%" : "",
         });
 
-        if (num > previous) {
-            el.classList.add("flash-up");
-        } else if (num < previous) {
-            el.classList.add("flash-down");
-        }
+        if (num > previous) el.classList.add("flash-up");
+        else if (num < previous) el.classList.add("flash-down");
     }
+
     function setAnimatedBalance(value) {
         const el = document.getElementById("balance");
         if (!el) return;
@@ -170,14 +244,11 @@ document.addEventListener("DOMContentLoaded", () => {
         animateNumber(el, previous, num, {
             duration: 700,
             decimals: 2,
-            suffix: "",
         });
 
-        if (num > previous) {
-            el.classList.add("balance-up");
-        } else if (num < previous) {
-            el.classList.add("balance-down");
-        } else {
+        if (num > previous) el.classList.add("balance-up");
+        else if (num < previous) el.classList.add("balance-down");
+        else {
             el.classList.add("balance-idle");
             return;
         }
@@ -188,7 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 1200);
     }
 
-    function clearPositionLines() {
+    function clearTradeLines() {
         if (entryLine) {
             candleSeries.removePriceLine(entryLine);
             entryLine = null;
@@ -201,10 +272,21 @@ document.addEventListener("DOMContentLoaded", () => {
             candleSeries.removePriceLine(tpLine);
             tpLine = null;
         }
+        if (partialLine) {
+            candleSeries.removePriceLine(partialLine);
+            partialLine = null;
+        }
+    }
+
+    function resetTradeSelection() {
+        selectedTrade = null;
+        scaleHelperSeries.setData([]);
+        candleSeries.setMarkers([]);
+        clearTradeLines();
     }
 
     function renderPositionLines(positions) {
-        clearPositionLines();
+        clearTradeLines();
 
         if (!positions || positions.length === 0) return;
 
@@ -246,6 +328,129 @@ document.addEventListener("DOMContentLoaded", () => {
                 axisLabelVisible: true,
                 title: "TP",
             });
+        }
+    }
+
+    function renderSelectedTradeMarker(trade) {
+        if (!trade || !trade.timestamp) {
+            candleSeries.setMarkers([]);
+            return;
+        }
+
+        const markers = [];
+        const entryTime = parseInt(trade.timestamp);
+
+        if (Number.isFinite(entryTime)) {
+            markers.push({
+                time: entryTime,
+                position: "belowBar",
+                color: "#3b82f6",
+                shape: "circle",
+                text: "ENTRY",
+            });
+        }
+
+        if (trade.partial_timestamp) {
+            const partialTime = parseInt(trade.partial_timestamp);
+            if (Number.isFinite(partialTime)) {
+                markers.push({
+                    time: partialTime,
+                    position: "aboveBar",
+                    color: "#facc15",
+                    shape: "circle",
+                    text: "PARTIAL",
+                });
+            }
+        }
+
+        if (trade.exit_timestamp) {
+            const exitTime = parseInt(trade.exit_timestamp);
+            if (Number.isFinite(exitTime)) {
+                const pnl = parseFloat(trade.pnl_net ?? trade.pnl ?? 0);
+                const isWin = pnl > 0;
+
+                markers.push({
+                    time: exitTime,
+                    position: "aboveBar",
+                    color: isWin ? "#22c55e" : "#ef4444",
+                    shape: "arrowDown",
+                    text: isWin ? "TP" : "SL",
+                });
+            }
+        }
+
+        candleSeries.setMarkers(markers);
+    }
+
+    function renderSelectedTradeLines(trade) {
+        clearTradeLines();
+        scaleHelperSeries.setData([]);
+
+        if (!trade) return;
+
+        const entry = parseFloat(trade.entry_price || 0);
+        const stop = parseFloat(trade.stop_loss || 0);
+        const tp = parseFloat(trade.take_profit || 0);
+        const partial = parseFloat(trade.partial_price || 0);
+
+        const prices = [entry, stop, tp, partial].filter(
+            (v) => Number.isFinite(v) && v > 0
+        );
+
+        if (entry > 0) {
+            entryLine = candleSeries.createPriceLine({
+                price: entry,
+                color: "#3b82f6",
+                lineWidth: 1,
+                lineStyle: LightweightCharts.LineStyle.Solid,
+                axisLabelVisible: true,
+                title: "ENTRY",
+            });
+        }
+
+        if (stop > 0) {
+            stopLine = candleSeries.createPriceLine({
+                price: stop,
+                color: "#ef4444",
+                lineWidth: 1,
+                lineStyle: LightweightCharts.LineStyle.Dashed,
+                axisLabelVisible: true,
+                title: "SL",
+            });
+        }
+
+        if (tp > 0) {
+            tpLine = candleSeries.createPriceLine({
+                price: tp,
+                color: "#22c55e",
+                lineWidth: 1,
+                lineStyle: LightweightCharts.LineStyle.Dashed,
+                axisLabelVisible: true,
+                title: "TP",
+            });
+        }
+
+        if (partial > 0) {
+            partialLine = candleSeries.createPriceLine({
+                price: partial,
+                color: "#facc15",
+                lineWidth: 1,
+                lineStyle: LightweightCharts.LineStyle.Dotted,
+                axisLabelVisible: true,
+                title: "PARTIAL",
+            });
+        }
+
+        if (prices.length > 0 && trade.timestamp) {
+            const entryTime = parseInt(trade.timestamp);
+
+            if (Number.isFinite(entryTime)) {
+                const helperData = prices.map((price) => ({
+                    time: entryTime,
+                    value: price,
+                }));
+                scaleHelperSeries.setData(helperData);
+            }
         }
     }
 
@@ -331,7 +536,7 @@ document.addEventListener("DOMContentLoaded", () => {
             div.style.cursor = "pointer";
             div.style.marginBottom = "8px";
 
-            if (p.symbol === currentSymbol) {
+            if (p.symbol === currentSymbol && !selectedTrade) {
                 div.style.background = "rgba(59,130,246,0.12)";
                 div.style.border = "1px solid #3b82f6";
             } else {
@@ -351,6 +556,8 @@ document.addEventListener("DOMContentLoaded", () => {
             div.addEventListener("click", async () => {
                 selectedPositionSymbol = p.symbol;
                 currentSymbol = p.symbol;
+                resetTradeSelection();
+
                 await loadChart(currentSymbol);
                 renderPositions(positions);
                 renderPositionLines(positions);
@@ -364,16 +571,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const rawResult = String(t.result ?? "").trim();
         const pnlNum = Number(t.pnl_net ?? t.pnl ?? 0);
 
-        if (rawResult === "" || rawResult.toLowerCase() === "open") {
-            return "open";
-        }
-
+        if (rawResult === "" || rawResult.toLowerCase() === "open") return "open";
         if (rawResult === "1") return "win";
         if (rawResult === "0") return "loss";
-
         if (pnlNum > 0) return "win";
         if (pnlNum < 0) return "loss";
-
         return "open";
     }
 
@@ -386,6 +588,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const fee = Number(t.fee_total || 0).toFixed(4);
 
         const tr = document.createElement("tr");
+        tr.style.cursor = "pointer";
+
         tr.innerHTML = `
             <td>${symbol}</td>
             <td>${statusText}</td>
@@ -397,6 +601,16 @@ document.addEventListener("DOMContentLoaded", () => {
         if (statusText === "WIN") tr.style.color = "#22c55e";
         else if (statusText === "LOSS") tr.style.color = "#ef4444";
         else tr.style.color = "#facc15";
+
+        tr.addEventListener("click", async () => {
+            selectedPositionSymbol = null;
+            selectedTrade = t;
+            currentSymbol = symbol;
+
+            await loadChart(currentSymbol);
+            renderSelectedTradeMarker(selectedTrade);
+            renderSelectedTradeLines(selectedTrade);
+        });
 
         return tr;
     }
@@ -436,6 +650,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const summaryItem = document.createElement("div");
             summaryItem.className = "trade-summary-item";
+            summaryItem.style.cursor = "pointer";
 
             let badgeText = "OPEN";
             if (status === "win") badgeText = "WIN";
@@ -445,6 +660,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span class="trade-summary-symbol">${symbol}</span>
                 <span class="trade-summary-badge ${status}">${badgeText}</span>
             `;
+
+            summaryItem.addEventListener("click", async () => {
+                selectedPositionSymbol = null;
+                selectedTrade = t;
+                currentSymbol = symbol;
+
+                await loadChart(currentSymbol);
+                renderSelectedTradeMarker(selectedTrade);
+                renderSelectedTradeLines(selectedTrade);
+            });
 
             summaryContainer.appendChild(summaryItem);
 
@@ -470,40 +695,6 @@ document.addEventListener("DOMContentLoaded", () => {
             tr.innerHTML = `<td colspan="5">Sin losses recientes</td>`;
             lossesTbody.appendChild(tr);
         }
-    }
-
-    function renderMarkers(trades) {
-        const markers = [];
-
-        (trades || []).forEach((t) => {
-            if (!t.timestamp) return;
-
-            const time = parseInt(t.timestamp);
-            if (!Number.isFinite(time)) return;
-
-            if (String(t.result ?? "").trim() === "") {
-                markers.push({
-                    time: time,
-                    position: "belowBar",
-                    color: "#3b82f6",
-                    shape: "circle",
-                    text: "ENTRY",
-                });
-            } else {
-                const pnl = parseFloat(t.pnl_net || t.pnl || 0);
-                const isWin = pnl > 0;
-
-                markers.push({
-                    time: time,
-                    position: "aboveBar",
-                    color: isWin ? "#22c55e" : "#ef4444",
-                    shape: "arrowDown",
-                    text: isWin ? "TP" : "SL",
-                });
-            }
-        });
-
-        candleSeries.setMarkers(markers);
     }
 
     function renderAlerts(alerts) {
@@ -619,7 +810,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const data = await res.json();
 
-            if (!data.candles || data.candles.length === 0) return;
+            // limpiar siempre antes de cargar nuevo símbolo
+            candleSeries.setData([]);
+            ma50Series.setData([]);
+            ma200Series.setData([]);
+            scaleHelperSeries.setData([]);
+            candleSeries.setMarkers([]);
+            clearTradeLines();
+
+            if (!data.candles || data.candles.length === 0) {
+                const symbolEl = document.getElementById("symbol");
+                const priceEl = document.getElementById("price");
+
+                if (symbolEl) symbolEl.innerText = symbol;
+                if (priceEl) priceEl.innerText = "Sin data";
+                return;
+            }
 
             candleSeries.setData(data.candles);
             ma50Series.setData(data.ma50 || []);
@@ -635,6 +841,25 @@ document.addEventListener("DOMContentLoaded", () => {
             chart.timeScale().fitContent();
         } catch (err) {
             console.error("Error chart:", err);
+        }
+    }
+
+    async function loadTodayStats() {
+        try {
+            const res = await fetch("/api/stats/today");
+            if (!res.ok) {
+                console.error("API today stats error:", res.status);
+                return;
+            }
+
+            const data = await res.json();
+
+            setAnimatedText("wins", data.wins ?? 0, "#22c55e");
+            setAnimatedText("losses", data.losses ?? 0, "#ef4444");
+            setColoredValue("daily-net", data.pnl_net ?? 0);
+            setAnimatedText("daily-trades", data.trades ?? 0, "#e5e7eb");
+        } catch (err) {
+            console.error("Error today stats:", err);
         }
     }
 
@@ -655,8 +880,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 setColoredValue("net-profit", data.performance.net_profit);
                 setColoredValue("avg-profit", data.performance.avg_profit_per_trade);
                 setColoredValue("drawdown", data.performance.max_drawdown, true);
-
-                
                 setAnimatedText("trades", data.performance.trades ?? 0, "#e5e7eb");
 
                 const winrate = Number(data.performance.winrate ?? 0);
@@ -666,12 +889,24 @@ document.addEventListener("DOMContentLoaded", () => {
                     "#ef4444";
 
                 setColoredValue("winrate", winrate, true);
+
                 const winEl = document.getElementById("winrate");
-                if (winEl) {
-                    winEl.style.color = winElColor;
-                }
+                if (winEl) winEl.style.color = winElColor;
 
                 renderEquity(data.performance.history || []);
+
+                const totalWins = data.performance.wins ?? 0;
+                const totalLosses = data.performance.losses ?? 0;
+                const winsTitle = document.getElementById("wins-title");
+                const lossesTitle = document.getElementById("losses-title");
+
+                if (winsTitle) {
+                    winsTitle.innerHTML = `WINS <span style="opacity:0.6;">(${totalWins})</span>`;
+                }
+
+                if (lossesTitle) {
+                    lossesTitle.innerHTML = `LOSSES <span style="opacity:0.6;">(${totalLosses})</span>`;
+                }
             }
 
             const botStatusEl = document.getElementById("bot-status");
@@ -698,8 +933,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const modeText = document.getElementById("mode-text");
             if (modeText) modeText.innerText = data.mode === "real" ? "REAL" : "DEMO";
 
-            const currentAiVisualLevel = aiLevelSelect?.value || "medium";
-            updateAiLevelBadge(currentAiVisualLevel);
+            updateAiLevelBadge(aiLevelSelect?.value || "medium");
 
             if (data.ai) {
                 const aiStrategy = document.getElementById("ai-strategy");
@@ -720,48 +954,54 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
-            if (data.positions && data.positions.length > 0) {
-                const exists = data.positions.some((p) => p.symbol === selectedPositionSymbol);
+            if (!selectedTrade) {
+                if (data.positions && data.positions.length > 0) {
+                    const exists = data.positions.some((p) => p.symbol === selectedPositionSymbol);
 
-                if (exists) {
-                    currentSymbol = selectedPositionSymbol;
+                    if (exists) {
+                        currentSymbol = selectedPositionSymbol;
+                    } else {
+                        currentSymbol = data.positions[0].symbol;
+                        selectedPositionSymbol = currentSymbol;
+                    }
                 } else {
-                    currentSymbol = data.positions[0].symbol;
-                    selectedPositionSymbol = currentSymbol;
+                    currentSymbol = "BTCUSDT";
+                    selectedPositionSymbol = null;
                 }
-            } else {
-                currentSymbol = "BTCUSDT";
-                selectedPositionSymbol = null;
             }
-            const totalWins = data.performance.wins ?? 0;
-            const totalLosses = data.performance.losses ?? 0;
-
-            const winsTitle = document.getElementById("wins-title");
-            const lossesTitle = document.getElementById("losses-title");
-
-            if (winsTitle) {
-                winsTitle.innerText = `WINS (${totalWins})`;
-            }
-
-            if (lossesTitle) {
-                lossesTitle.innerText = `LOSSES (${totalLosses})`;
-            }
-            winsTitle.innerHTML = `WINS <span style="opacity:0.6;">(${totalWins})</span>`;
-            lossesTitle.innerHTML = `LOSSES <span style="opacity:0.6;">(${totalLosses})</span>`;
 
             await loadChart(currentSymbol);
 
             renderPositions(data.positions || []);
-            renderPositionLines(data.positions || []);
             renderTrades(data.trades || []);
-            renderMarkers(data.trades || []);
+
+            if (selectedTrade) {
+                renderSelectedTradeMarker(selectedTrade);
+                renderSelectedTradeLines(selectedTrade);
+            } else {
+                scaleHelperSeries.setData([]);
+                candleSeries.setMarkers([]);
+                renderPositionLines(data.positions || []);
+            }
+
             renderAlerts(data.alerts || []);
             renderDecisions(data.last_decisions || []);
             await loadTodayStats();
-        } 
-        catch (err) {
+        } catch (err) {
             console.error("Error dashboard:", err);
         }
+    }
+
+    function resizeChart() {
+        if (!chartElement) return;
+
+        const width = chartElement.clientWidth;
+        const dynamicHeight = window.innerWidth <= 700 ? 340 : window.innerWidth <= 1100 ? 440 : 560;
+
+        chart.applyOptions({
+            width,
+            height: dynamicHeight,
+        });
     }
 
     function startAutoRefresh() {
@@ -773,100 +1013,13 @@ document.addEventListener("DOMContentLoaded", () => {
     loadDashboard();
     startAutoRefresh();
 
+    const resizeObserver = new ResizeObserver(() => {
+        resizeChart();
+    });
+
+    resizeObserver.observe(chartElement);
+
     window.addEventListener("resize", () => {
-        chart.applyOptions({
-            width: chartElement.clientWidth,
-        });
+        resizeChart();
     });
-    async function loadTodayStats() {
-    try {
-        const res = await fetch("/api/stats/today");
-        if (!res.ok) {
-            console.error("API today stats error:", res.status);
-            return;
-        }
-
-        const data = await res.json();
-
-        setAnimatedText("wins", data.wins ?? 0, "#22c55e");
-        setAnimatedText("losses", data.losses ?? 0, "#ef4444");
-
-        setColoredValue("daily-net", data.pnl_net ?? 0);
-        setAnimatedText("daily-trades", data.trades ?? 0, "#e5e7eb");
-
-    } catch (err) {
-        console.error("Error today stats:", err);
-    }
-}
-
 });
-function setAnimatedText(elementId, value, color = null, suffix = "") {
-    const el = document.getElementById(elementId);
-    if (!el) return;
-
-    const num = Number(value) || 0;
-    const previousRaw = el.dataset.prevValue;
-    const previous = previousRaw !== undefined ? Number(previousRaw) : null;
-
-    el.dataset.prevValue = num;
-
-    if (color) {
-        el.style.color = color;
-    }
-
-    el.classList.remove("flash-up", "flash-down", "flash-neutral");
-    void el.offsetWidth;
-
-    if (previous === null || Number.isNaN(previous)) {
-        el.innerText = `${num}${suffix}`;
-        el.classList.add("flash-neutral");
-        return;
-    }
-
-    animateNumber(el, previous, num, {
-        duration: 400,
-        decimals: 0,
-        suffix: suffix,
-    });
-
-    if (num > previous) {
-        el.classList.add("flash-up");
-    } else if (num < previous) {
-        el.classList.add("flash-down");
-    }
-}
-function animateNumber(el, from, to, options = {}) {
-    if (!el) return;
-
-    const {
-        duration = 450,
-        decimals = 2,
-        suffix = "",
-    } = options;
-
-    const start = performance.now();
-    const change = to - from;
-
-    function easeOutCubic(t) {
-        return 1 - Math.pow(1 - t, 3);
-    }
-
-    function frame(now) {
-        const elapsed = now - start;
-        const progress = Math.min(elapsed / duration, 1);
-        const eased = easeOutCubic(progress);
-
-        const current = from + change * eased;
-        el.innerText = current.toFixed(decimals) + suffix;
-
-        if (progress < 1) {
-            requestAnimationFrame(frame);
-        } else {
-            el.innerText = to.toFixed(decimals) + suffix;
-        }
-    }
-
-    requestAnimationFrame(frame);
-}
-
-

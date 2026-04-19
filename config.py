@@ -32,21 +32,47 @@ MAX_POSITIONS = 3
 # =========================
 def ensure_state():
     if not os.path.exists(STATE_FILE):
-        with open(STATE_FILE, "w") as f:
-            json.dump({"running": False, "mode": "demo"}, f)
+        with open(STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(
+                {
+                    "running": False,
+                    "mode": "demo",
+                    "stop_after_close": False,
+                },
+                f
+            )
 
 
 def read_state():
     ensure_state()
     try:
-        with open(STATE_FILE, "r") as f:
-            return json.load(f)
-    except:
-        return {"running": False, "mode": "demo"}
+        with open(STATE_FILE, "r", encoding="utf-8") as f:
+            state = json.load(f)
+
+        # compatibilidad con archivos viejos
+        if "running" not in state:
+            state["running"] = False
+        if "mode" not in state:
+            state["mode"] = "demo"
+        if "stop_after_close" not in state:
+            state["stop_after_close"] = False
+
+        return state
+
+    except Exception:
+        return {
+            "running": False,
+            "mode": "demo",
+            "stop_after_close": False,
+        }
 
 
 def write_state(state):
-    with open(STATE_FILE, "w") as f:
+    state.setdefault("running", False)
+    state.setdefault("mode", "demo")
+    state.setdefault("stop_after_close", False)
+
+    with open(STATE_FILE, "w", encoding="utf-8") as f:
         json.dump(state, f)
 
 
@@ -59,8 +85,38 @@ def is_running():
 
 def set_running(value):
     state = read_state()
-    state["running"] = value
+    state["running"] = bool(value)
+
+    # si apagas duro, limpiar soft stop
+    if not value:
+        state["stop_after_close"] = False
+
     write_state(state)
+
+
+def start_bot_state():
+    state = read_state()
+    state["running"] = True
+    state["stop_after_close"] = False
+    write_state(state)
+
+
+def stop_bot_state():
+    state = read_state()
+    state["running"] = False
+    state["stop_after_close"] = False
+    write_state(state)
+
+
+def request_soft_stop():
+    state = read_state()
+    state["running"] = True
+    state["stop_after_close"] = True
+    write_state(state)
+
+
+def should_stop_after_close():
+    return read_state().get("stop_after_close", False)
 
 
 def get_mode():
@@ -89,11 +145,11 @@ def get_strategy_name():
 # ===============================
 # CONFIG IA
 # ===============================
-OPTIMIZED_FILE = "optimized_config.json"
+OPTIMIZED_FILE = os.path.join(BASE_DIR, "optimized_config.json")
 
 
 def save_best_config(data):
-    with open(OPTIMIZED_FILE, "w") as f:
+    with open(OPTIMIZED_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f)
 
 
@@ -102,7 +158,7 @@ def load_best_config():
         return None
 
     try:
-        with open(OPTIMIZED_FILE, "r") as f:
+        with open(OPTIMIZED_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
-    except:
+    except Exception:
         return None

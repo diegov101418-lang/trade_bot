@@ -18,7 +18,10 @@ from config import (
     set_mode,
     get_mode,
     set_strategy,
-    get_strategy_name
+    get_strategy_name,
+    request_soft_stop,
+    stop_bot_state,
+    should_stop_after_close,
 )
 
 from services.dashboard_service import get_dashboard_data
@@ -119,6 +122,7 @@ def dashboard():
         running=is_running(),
         mode=get_mode(),
         strategy=get_strategy_name(),
+        stop_after_close=should_stop_after_close(),
     )
 
 
@@ -178,7 +182,15 @@ def start():
 
 @app.route("/stop")
 def stop():
-    set_running(False)
+    # stop suave: no abre más BUY, pero sigue cerrando posiciones
+    request_soft_stop()
+    return redirect("/")
+
+
+@app.route("/force_stop")
+def force_stop():
+    # stop duro: corta todo
+    stop_bot_state()
     return redirect("/")
 
 

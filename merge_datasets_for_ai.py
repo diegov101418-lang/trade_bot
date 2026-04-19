@@ -25,6 +25,7 @@ COMMON_COLUMNS = [
     "mae_pct",
     "dataset_version",
     "result_net",
+    "pnl_net",
 ]
 
 DATASETS = [

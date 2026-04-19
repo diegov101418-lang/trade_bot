@@ -1,6 +1,7 @@
 import time
 import holidays
 import re
+import pandas as pd
 from datetime import datetime, timezone, timedelta, date
 from services.daily_snapshot_service import upsert_today_snapshot
 from risk_manager import (
@@ -34,6 +35,8 @@ from config import (
     MAX_POSITIONS,
     get_mode,
     get_strategy_name,
+    stop_bot_state,
+    should_stop_after_close,
 )
 
 from portfolio import get_balance, get_free_balance, lock_balance, unlock_balance
@@ -274,6 +277,7 @@ def evaluate_trade_context(
 trailing_data = {}
 last_trade_time = {}
 open_time_data = {}
+post_loss_cooldown = {}
 
 
 def update_trailing(symbol, price, atr, volatility_context, entry_price):
@@ -327,6 +331,7 @@ def can_trade(symbol):
 
     last_trade_time[symbol] = now
     return True
+
 
 
 # =========================
@@ -400,6 +405,53 @@ def choose_signal_with_ai(signals, ai_strategy_name):
 
     return max(signals, key=lambda x: float(x.get("confidence", 0)))
 
+# =========================
+# MÉTRICAS DIARIAS POR SÍMBOLO
+# =========================
+from datetime import datetime, timezone
+
+def get_daily_pnl(symbol):
+    try:
+        df = pd.read_csv("trades_dataset.csv")
+
+        today = datetime.now(timezone.utc).date()
+
+        df["date"] = pd.to_datetime(df["timestamp"], unit="s").dt.date
+
+        df_today = df[
+            (df["symbol"] == symbol) &
+            (df["date"] == today)
+        ]
+
+        pnl = df_today["pnl_net"].dropna()
+
+        return pnl.sum() if len(pnl) > 0 else 0
+
+    except Exception as e:
+        log(f"⚠ error get_daily_pnl {symbol}: {e}")
+        return 0
+
+
+def count_daily_losses(symbol):
+    try:
+        df = pd.read_csv("trades_dataset.csv")
+
+        today = datetime.now(timezone.utc).date()
+
+        df["date"] = pd.to_datetime(df["timestamp"], unit="s").dt.date
+
+        df_today = df[
+            (df["symbol"] == symbol) &
+            (df["date"] == today)
+        ]
+
+        losses = df_today[df_today["pnl_net"] < 0]
+
+        return len(losses)
+
+    except Exception as e:
+        log(f"⚠ error count_daily_losses {symbol}: {e}")
+        return 0
 
 # =========================
 # PROCESAR MONEDA
@@ -471,6 +523,42 @@ def process_symbol(symbol):
             log(f"⚠ {symbol} bloqueado por cooldown")
             add_last_decision(symbol, "SKIP", 0, "-", "cooldown")
             return
+
+        # =========================
+        # COOLDOWN POST-PÉRDIDA
+        # =========================
+        cooldown_until = post_loss_cooldown.get(symbol, 0)
+        if time.time() < cooldown_until:
+            mins_left = int((cooldown_until - time.time()) / 60) + 1
+            log(f"⛔ {symbol} cooldown post-pérdida activo | faltan {mins_left}m")
+            add_last_decision(symbol, "SKIP", 0, "-", "post_loss_cooldown")
+            return
+
+        # =========================
+        # LÍMITE DE PÉRDIDAS DIARIAS
+        # =========================
+        daily_losses = count_daily_losses(symbol)
+        daily_pnl = get_daily_pnl(symbol)
+
+        risk_per_trade_typical = 0.02
+        balance = get_balance()
+        max_daily_loss_per_symbol = balance * risk_per_trade_typical * 2
+
+        if daily_losses >= 3:
+            log(f"⛔ {symbol} bloqueado | {daily_losses} pérdidas hoy")
+            add_last_decision(symbol, "SKIP", 0, "-", "daily_loss_limit")
+            return
+
+        if daily_pnl < -max_daily_loss_per_symbol:
+            log(
+                f"⛔ {symbol} bloqueado | "
+                f"pnl diario {daily_pnl:.2f} < {-max_daily_loss_per_symbol:.2f}"
+            )
+            add_last_decision(symbol, "SKIP", 0, "-", "daily_pnl_limit")
+            return
+
+        if daily_losses >= 2 and daily_pnl < -(max_daily_loss_per_symbol * 0.5):
+            log(f"⚠️ {symbol} en alerta | {daily_losses} pérdidas, pnl {daily_pnl:.2f}")
 
         if symbol_is_blocked(symbol):
             log(f"⚠ {symbol} bloqueado por symbol_filter")
@@ -552,6 +640,65 @@ def process_symbol(symbol):
         )
 
         # =========================
+        # ANTI FAST SL FILTER
+        # =========================
+        momentum_pct = (price - ma50) / ma50 if ma50 > 0 else 0
+        distance_from_ma50 = abs(price - ma50) / ma50 if ma50 > 0 else 0
+
+        if strategy_name.lower() == "mean_reversion":
+
+            # 1. CAÍDA FUERTE ACTIVA
+            if momentum_pct < -0.02:
+                log(f"⛔ {symbol} skip | caída fuerte activa {momentum_pct:.2%}")
+                add_last_decision(symbol, "SKIP", signal_confidence, liquidity_mode, "fastsl_strong_drop")
+                return
+
+            # 2. SIN DESVIACIÓN SUFICIENTE
+            if distance_from_ma50 < 0.012:
+                log(f"⚠ {symbol} skip | sin desviación suficiente {distance_from_ma50:.2%}")
+                add_last_decision(symbol, "SKIP", signal_confidence, liquidity_mode, "fastsl_no_deviation")
+                return
+
+            # 3. REBOTE CONFIRMADO
+            if df is not None and len(df) >= 3:
+                c1 = df["close"].iloc[-1]
+                c2 = df["close"].iloc[-2]
+
+                rebound_thresholds = {
+                    "low": 1.003,     # +0.3%
+                    "medium": 1.005,  # +0.5%
+                    "high": 1.008,    # +0.8%
+                }
+                rebound_factor = rebound_thresholds.get(volatility_context, 1.005)
+
+                if not (c1 > c2 * rebound_factor):
+                    log(
+                        f"⛔ {symbol} skip | sin rebote suficiente | "
+                        f"need=+{(rebound_factor - 1) * 100:.2f}% | "
+                        f"c1={c1:.6f} c2={c2:.6f}"
+                    )
+                    add_last_decision(symbol, "SKIP", signal_confidence, liquidity_mode, "fastsl_no_rebound")
+                    return
+
+            # 4. VOLUMEN DÉBIL
+            if volume < avg_volume * 0.7:
+                log(f"⚠ {symbol} skip | volumen débil {volume/avg_volume:.1%}")
+                add_last_decision(symbol, "SKIP", signal_confidence, liquidity_mode, "fastsl_low_volume")
+                return
+
+            # 5. ALTA VOLATILIDAD SIN CONFIANZA
+            if volatility_context == "high" and signal_confidence < 0.75:
+                log(f"⚠ {symbol} skip | alta vol sin confianza {signal_confidence:.2f}")
+                add_last_decision(symbol, "SKIP", signal_confidence, liquidity_mode, "fastsl_high_volatility")
+                return
+
+            log(
+                f"✅ {symbol} anti-FAST_SL OK | "
+                f"momentum={momentum_pct:.2%} | "
+                f"dist={distance_from_ma50:.2%}"
+            )
+
+        # =========================
         # IA VIEJA -> DECISIÓN REAL
         # =========================
         ai_decision = predict_trade({
@@ -570,7 +717,7 @@ def process_symbol(symbol):
         })
 
         # =========================
-        # IA NUEVA -> MODO SOMBRA (SOLO OBSERVA)
+        # IA NUEVA -> MODO SOMBRA
         # =========================
         shadow_prediction = ""
         prob_live = ""
@@ -596,12 +743,8 @@ def process_symbol(symbol):
             })
 
             shadow_prediction = int(shadow_result.get("prediction", 0))
-            prob_live = float(
-                shadow_result.get("live_result", {}).get("probability_win", 0.0)
-            )
-            prob_historical = float(
-                shadow_result.get("historical_result", {}).get("probability_win", 0.0)
-            )
+            prob_live = float(shadow_result.get("live_result", {}).get("probability_win", 0.0))
+            prob_historical = float(shadow_result.get("historical_result", {}).get("probability_win", 0.0))
             prob_final = float(shadow_result.get("probability_win", 0.0))
             decision_source = str(shadow_result.get("manager_mode", "unknown"))
 
@@ -671,6 +814,9 @@ def process_symbol(symbol):
             )
             return
 
+        # =========================
+        # FILTROS DE CALIDAD DE ENTRADA
+        # =========================
         risk_mode = trade_context["risk_mode_final"]
         required_conf = get_required_confidence(strategy_name)
 
@@ -688,11 +834,46 @@ def process_symbol(symbol):
             )
             return
 
+        if strategy_name.lower() == "mean_reversion":
+            if rsi > 60:
+                log(f"⚠ {symbol} skip MR RSI alto | rsi={rsi:.2f}")
+                add_last_decision(
+                    symbol,
+                    "SKIP",
+                    signal_confidence,
+                    liquidity_mode,
+                    f"mr_rsi_high:{strategy_name}"
+                )
+                return
+
+            if momentum_pct > 0.02:
+                log(f"⚠ {symbol} skip MR sobreextendido | momentum={momentum_pct:.2%}")
+                add_last_decision(
+                    symbol,
+                    "SKIP",
+                    signal_confidence,
+                    liquidity_mode,
+                    f"mr_overextended:{strategy_name}"
+                )
+                return
+
+            if distance_from_ma50 < 0.01:
+                log(f"⚠ {symbol} skip MR sin desviación | dist={distance_from_ma50:.2%}")
+                add_last_decision(
+                    symbol,
+                    "SKIP",
+                    signal_confidence,
+                    liquidity_mode,
+                    f"mr_no_deviation:{strategy_name}"
+                )
+                return
+
         exceptional_setup = recovery or trend_change or bearish_rebound
+        min_exception_confidence = 0.75
 
         should_buy = (
             (signal_type == "BUY" and signal_confidence >= required_conf)
-            or (exceptional_setup and signal_confidence >= required_conf)
+            or (exceptional_setup and signal_confidence >= min_exception_confidence)
         )
 
         if not should_buy:
@@ -702,7 +883,8 @@ def process_symbol(symbol):
                 f"conf={signal_confidence:.2f} | "
                 f"required={required_conf:.2f} | "
                 f"strategy={strategy_name} | "
-                f"exceptional={exceptional_setup}"
+                f"exceptional={exceptional_setup} | "
+                f"min_exc_conf={min_exception_confidence:.2f}"
             )
             add_last_decision(
                 symbol,
@@ -713,6 +895,9 @@ def process_symbol(symbol):
             )
             return
 
+        # =========================
+        # CÁLCULO DE POSICIÓN
+        # =========================
         try:
             balance_total = get_balance()
             balance_free = get_free_balance()
@@ -750,154 +935,178 @@ def process_symbol(symbol):
             if total_trades < 20:
                 risk_per_trade_used *= 0.5
 
-            quantity = calculate_position_size(
-                balance=balance_free,
-                risk_per_trade=risk_per_trade_used,
-                entry=price,
-                stop=stop_loss_price,
-            )
+            risk_amount = balance_free * risk_per_trade_used
+
+            if sl_pct > 0:
+                position_value = risk_amount / sl_pct
+                max_exposure = balance_free * 0.25
+                capital = min(position_value, max_exposure)
+            else:
+                capital = 0
+
+            quantity = round(capital / price, 6)
+
+            min_order_value = 10
+            if capital < min_order_value:
+                log(f"⚠ {symbol} capital insuficiente | ${capital:.2f} < ${min_order_value}")
+                add_last_decision(symbol, "SKIP", signal_confidence, liquidity_mode, f"min_order:{strategy_name}")
+                return
 
             if quantity <= 0:
                 log(f"⚠ {symbol} quantity = 0")
                 add_last_decision(symbol, "SKIP", signal_confidence, liquidity_mode, f"zero_quantity:{strategy_name}")
                 return
 
-            capital = min(quantity * price, balance_free * 0.2)
-            quantity = round(capital / price, 6)
+            exposure_pct = (capital / balance_free) * 100 if balance_free > 0 else 0
+            if exposure_pct > 20:
+                log(f"⚠️ ALTA EXPOSICIÓN | {symbol} | {exposure_pct:.1f}% del balance")
 
             tp_pct = get_dynamic_tp(strategy_name, volatility_context, BEST_TP, signal_confidence)
             take_profit_price = price * (1 + tp_pct)
 
-            if quantity <= 0 or capital <= 0:
-                log(f"⚠ {symbol} capital inválido | capital={capital} qty={quantity}")
-                add_last_decision(symbol, "SKIP", signal_confidence, liquidity_mode, f"invalid_capital:{strategy_name}")
-                return
-
-            if not lock_balance(capital):
-                log(f"⚠ {symbol} no pudo bloquear capital")
-                add_last_decision(symbol, "SKIP", signal_confidence, liquidity_mode, f"lock_balance_failed:{strategy_name}")
-                return
-
-            add_position(
-                symbol,
-                price,
-                quantity,
-                capital,
-                stop_loss_price,
-                take_profit_price,
-                extra={
-                    "open_time": time.time(),
-                    "partial_tp_done": False,
-                    "strategy_name": strategy_name,
-                    "tp_pct": tp_pct,
-                }
-            )
-
-            open_time_data[symbol] = time.time()
-
-            add_last_decision(
-                symbol,
-                "BUY",
-                signal_confidence,
-                liquidity_mode,
-                f"ok:{strategy_name}"
-            )
-
             log(
-                f"✅ APERTURA | {symbol} | "
-                f"entry={price:.6f} | "
+                f"📊 POSITION CALC | {symbol} | "
+                f"risk=${risk_amount:.2f} | "
+                f"capital=${capital:.2f} | "
                 f"qty={quantity} | "
-                f"capital={capital:.2f} | "
-                f"risk_mode={risk_mode} | "
-                f"conf={signal_confidence:.2f} | "
-                f"strategy={strategy_name} | "
-                f"tp_dynamic={tp_pct*100:.2f}%"
+                f"entry={price:.6f} | "
+                f"sl={stop_loss_price:.6f} ({-sl_pct*100:.2f}%) | "
+                f"tp={take_profit_price:.6f} ({tp_pct*100:.2f}%)"
             )
 
-            log_order(
-                f"BUY | {symbol} | "
-                f"entry={price:.6f} | "
-                f"qty={quantity} | "
-                f"capital={capital:.2f} | "
-                f"strategy={strategy_name} | "
-                f"risk_mode={risk_mode} | "
-                f"tp={tp_pct*100:.2f}% | "
-                f"sl={-sl_pct*100:.2f}%"
-            )
-
-            now_ts = int(now_dt.timestamp())
-
-            register_trade({
-                "symbol": symbol,
-                "rsi": rsi,
-                "volume": vol_ratio,
-                "trend": int(price > ma50),
-                "momentum": price - ma50,
-                "result": "",
-                "pnl": "",
-                "timestamp": now_ts,
-                "hour": now_dt.hour,
-                "day_of_week": now_dt.weekday(),
-                "signal_confidence": signal_confidence,
-                "market_regime": market_regime,
-                "strategy_name": strategy_name,
-                "risk_mode": risk_mode,
-                "atr": atr,
-                "volatility_context": volatility_context,
-                "market_session": market_session,
-                "is_holiday_us": holiday_flags["is_holiday_us"],
-                "holiday_name_us": us_holidays.get(today, ""),
-                "is_holiday_ar": holiday_flags["is_holiday_ar"],
-                "holiday_name_ar": ar_holidays.get(today, ""),
-                "is_holiday_eu": holiday_flags["is_holiday_eu"],
-                "holiday_name_eu": uk_holidays.get(today, "") or de_holidays.get(today, ""),
-                "is_holiday_asia": holiday_flags["is_holiday_asia"],
-                "holiday_name_asia": (
-                    jp_holidays.get(today, "") or
-                    cn_holidays.get(today, "") or
-                    kr_holidays.get(today, "")
-                ),
-                "is_good_friday": holiday_flags["is_good_friday"],
-                "liquidity_mode": liquidity_mode,
-
-                # IA VIEJA (DECISIÓN OFICIAL)
-                "ai_trade_decision": ai_decision,
-
-                # IA NUEVA (MODO SOMBRA)
-                "shadow_prediction": shadow_prediction,
-                "prob_live": prob_live,
-                "prob_historical": prob_historical,
-                "prob_final": prob_final,
-                "decision_source": decision_source,
-                "models_agree": models_agree,
-
-                "ai_context_risk": ia_risk or "",
-                "trade_filter_reason": trade_context["reason"],
-                "dataset_version": "live_ai_risk_v3",
-                "risk_per_trade_used": risk_per_trade_used,
-            })
+            # =========================
+            # EJECUCIÓN CON ROLLBACK
+            # =========================
+            capital_locked = False
+            position_added = False
 
             try:
-                save_daily_stats_json()
-                log(f"📊 daily_stats.json actualizado | {symbol}")
-            except Exception as e:
-                log(f"⚠ Error actualizando daily stats: {e}")
+                if not lock_balance(capital):
+                    raise Exception("No se pudo bloquear capital")
+                capital_locked = True
 
-            if mode == "real":
-                log_order(f"REAL BUY | {symbol} | qty={quantity}")
-                buy(symbol, quantity)
+                add_position(
+                    symbol,
+                    price,
+                    quantity,
+                    capital,
+                    stop_loss_price,
+                    take_profit_price,
+                    extra={
+                        "open_time": time.time(),
+                        "partial_tp_done": False,
+                        "strategy_name": strategy_name,
+                        "tp_pct": tp_pct,
+                        "original_sl": -sl_pct,
+                        "risk_mode": risk_mode,
+                    }
+                )
+                position_added = True
+
+                open_time_data[symbol] = time.time()
+
+                add_last_decision(
+                    symbol,
+                    "BUY",
+                    signal_confidence,
+                    liquidity_mode,
+                    f"ok:{strategy_name}"
+                )
+
+                log(
+                    f"✅ APERTURA | {symbol} | "
+                    f"entry={price:.6f} | "
+                    f"qty={quantity} | "
+                    f"capital={capital:.2f} | "
+                    f"risk_mode={risk_mode} | "
+                    f"conf={signal_confidence:.2f} | "
+                    f"strategy={strategy_name} | "
+                    f"tp_dynamic={tp_pct*100:.2f}%"
+                )
+
+                log_order(
+                    f"BUY | {symbol} | "
+                    f"entry={price:.6f} | "
+                    f"qty={quantity} | "
+                    f"capital={capital:.2f} | "
+                    f"strategy={strategy_name} | "
+                    f"risk_mode={risk_mode} | "
+                    f"tp={tp_pct*100:.2f}% | "
+                    f"sl={-sl_pct*100:.2f}%"
+                )
+
+                now_ts = int(now_dt.timestamp())
+
+                register_trade({
+                    "symbol": symbol,
+                    "rsi": rsi,
+                    "volume": vol_ratio,
+                    "trend": int(price > ma50),
+                    "momentum": price - ma50,
+                    "result": "",
+                    "pnl": "",
+                    "timestamp": now_ts,
+                    "hour": now_dt.hour,
+                    "day_of_week": now_dt.weekday(),
+                    "signal_confidence": signal_confidence,
+                    "market_regime": market_regime,
+                    "strategy_name": strategy_name,
+                    "risk_mode": risk_mode,
+                    "atr": atr,
+                    "volatility_context": volatility_context,
+                    "market_session": market_session,
+                    "is_holiday_us": holiday_flags["is_holiday_us"],
+                    "holiday_name_us": us_holidays.get(today, ""),
+                    "is_holiday_ar": holiday_flags["is_holiday_ar"],
+                    "holiday_name_ar": ar_holidays.get(today, ""),
+                    "is_holiday_eu": holiday_flags["is_holiday_eu"],
+                    "holiday_name_eu": uk_holidays.get(today, "") or de_holidays.get(today, ""),
+                    "is_holiday_asia": holiday_flags["is_holiday_asia"],
+                    "holiday_name_asia": (
+                        jp_holidays.get(today, "") or
+                        cn_holidays.get(today, "") or
+                        kr_holidays.get(today, "")
+                    ),
+                    "is_good_friday": holiday_flags["is_good_friday"],
+                    "liquidity_mode": liquidity_mode,
+                    "ai_trade_decision": ai_decision,
+                    "shadow_prediction": shadow_prediction,
+                    "prob_live": prob_live,
+                    "prob_historical": prob_historical,
+                    "prob_final": prob_final,
+                    "decision_source": decision_source,
+                    "models_agree": models_agree,
+                    "ai_context_risk": ia_risk or "",
+                    "trade_filter_reason": trade_context["reason"],
+                    "dataset_version": "live_ai_risk_v3",
+                    "risk_per_trade_used": risk_per_trade_used,
+                })
+
+                try:
+                    save_daily_stats_json()
+                    log(f"📊 daily_stats.json actualizado | {symbol}")
+                except Exception as e:
+                    log(f"⚠ Error actualizando daily stats: {e}")
+
+                if mode == "real":
+                    log_order(f"REAL BUY | {symbol} | qty={quantity}")
+                    buy(symbol, quantity)
+
+            except Exception as exec_error:
+                if capital_locked and not position_added:
+                    log("🔄 Rollback: Liberando capital bloqueado por error")
+                    unlock_balance(capital, 0)
+                raise exec_error
 
         except Exception as e:
-            log(f"❌ Error al abrir posición: {e}")
+            log(f"❌ Error al abrir posición {symbol}: {e}")
             add_last_decision(
                 symbol,
-                "SKIP",
+                "ERROR",
                 signal_confidence if 'signal_confidence' in locals() else 0,
                 liquidity_mode if 'liquidity_mode' in locals() else "-",
                 f"open_error:{strategy_name if 'strategy_name' in locals() else 'unknown'}"
             )
-
-
  # =========================
         # SELL
  # =========================
@@ -998,11 +1207,11 @@ def process_symbol(symbol):
             # -------------------------------------------------
             if not should_close and not partial_done and time_in_trade_min <= 15:
                 fast_loss_thresholds = {
-                    "low": -0.012,
-                    "medium": -0.015,
-                    "high": -0.020,
+                    "low": -0.008,
+                    "medium": -0.010,
+                    "high": -0.015,
                 }
-                fast_loss_limit = fast_loss_thresholds.get(volatility_context, -0.015)
+                fast_loss_limit = fast_loss_thresholds.get(volatility_context, -0.005)
 
                 if profit_pct < fast_loss_limit:
                     should_close = True
@@ -1309,6 +1518,26 @@ def process_symbol(symbol):
                 fee_total = fee_entry + fee_exit
                 pnl_net = pnl_real - fee_total
 
+                # =========================
+                # COOLDOWN POST-PÉRDIDA POR SÍMBOLO
+                # =========================
+                if pnl_net < 0:
+                    cooldown_seconds = 1800  # 30 min base
+
+                    if exit_type in ["FAST_SL", "SL"]:
+                        cooldown_seconds = 3600  # 60 min si fue salida dura
+
+                    post_loss_cooldown[symbol] = time.time() + cooldown_seconds
+
+                    log(
+                        f"⛔ POST-LOSS COOLDOWN | {symbol} | "
+                        f"type={exit_type} | "
+                        f"pnl_net={pnl_net:.4f} | "
+                        f"cooldown={cooldown_seconds // 60}m"
+                    )
+                else:
+                    post_loss_cooldown.pop(symbol, None)
+
                 result = 1 if pnl_real > 0 else 0
                 result_net = 1 if pnl_net > 0 else 0
 
@@ -1372,15 +1601,64 @@ def process_symbol(symbol):
             import traceback
             log(traceback.format_exc())
 # =========================
-# LOOP
+# LOOP OPTIMIZADO
 # =========================
+last_entry_check = 0
+
+
 def run_cycle():
+    global last_entry_check
+
+    log("🔄 run_cycle iniciado")
     maybe_retrain()
 
-    for pos in get_open_positions():
-        process_symbol(pos["symbol"])
+    # =========================
+    # 1) SIEMPRE gestionar posiciones abiertas
+    # =========================
+    open_positions = get_open_positions()
 
-    raw_ops = rank_symbols(scan_market())
+    if open_positions:
+        log(f"📂 Posiciones abiertas: {len(open_positions)}")
+
+    for pos in open_positions:
+        try:
+            process_symbol(pos["symbol"])
+        except Exception as e:
+            log(f"❌ Error procesando SELL {pos.get('symbol')}: {e}")
+
+    # refrescar por si alguna cerró en este mismo ciclo
+    open_positions = get_open_positions()
+
+    # =========================
+    # 2) MODO APAGADO SUAVE
+    # =========================
+    if should_stop_after_close():
+        if len(open_positions) == 0:
+            log("🛑 Soft stop completado | no quedan posiciones abiertas")
+            stop_bot_state()
+        else:
+            log(f"⏳ Soft stop activo | esperando cerrar {len(open_positions)} posiciones")
+        return
+
+    # =========================
+    # 3) NUEVAS ENTRADAS SOLO SI NO HAY SOFT STOP
+    # =========================
+    now = time.time()
+
+    if now - last_entry_check < 60:
+        remaining = int(60 - (now - last_entry_check))
+        log(f"⏳ Saltando búsqueda de entradas | próximo scan en {remaining}s")
+        return
+
+    last_entry_check = now
+    log("🔎 Iniciando scan de nuevas entradas")
+
+    try:
+        raw_ops = rank_symbols(scan_market())
+    except Exception as e:
+        log(f"❌ Error en scan_market/rank_symbols: {e}")
+        return
+
     ops = []
 
     for op in raw_ops:
@@ -1397,26 +1675,37 @@ def run_cycle():
         symbol = op.get("symbol") or op.get("pair")
         if symbol:
             valid_symbols.append(symbol)
-            log(f"🔎 Analizando: {symbol}")
-            process_symbol(symbol)
+            log(f"🔎 Analizando BUY: {symbol}")
 
-    log(f"✅ Símbolos enviados a análisis: {len(valid_symbols)} | {valid_symbols}")
+            try:
+                process_symbol(symbol)
+            except Exception as e:
+                log(f"❌ Error procesando BUY {symbol}: {e}")
+
+    log(f"✅ Símbolos enviados a análisis BUY: {len(valid_symbols)} | {valid_symbols}")
 
 
 def start_bot():
+    log("🤖 BOT STARTED")
+
     while True:
-        if not is_running():
-            time.sleep(5)
-            continue
-
         try:
-            run_cycle()
-        except Exception as e:
-            log(f"🔥 Error: {e}")
+            if not is_running():
+                log("⏸ Bot pausado")
+                time.sleep(5)
+                continue
 
-        time.sleep(30)
+            log("🚀 Ejecutando run_cycle()")
+            run_cycle()
+            log("✅ run_cycle finalizado")
+
+        except Exception as e:
+            log(f"🔥 ERROR LOOP: {e}")
+
+        time.sleep(20)
 
 
 if __name__ == "__main__":
     ensure_trades_file()
+    log("🚀 Iniciando bot...")
     start_bot()

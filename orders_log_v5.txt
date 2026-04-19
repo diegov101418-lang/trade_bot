@@ -68,3 +68,157 @@
 2026-04-17 06:15:03 | SELL | METISUSDT | type=TP | reason=tp_after_partial | price=4.750000 | qty=19.321468 | pnl=5.6032 | pnl_net=5.4253 | profit_pct=6.50% | time=9.8m
 2026-04-17 06:19:37 | SELL | MOVRUSDT | type=SL | reason=stop_loss_-1.00% | price=2.831000 | qty=23.665979 | pnl=-1.9406 | pnl_net=-2.0765 | profit_pct=-2.81% | time=14.3m
 2026-04-17 07:03:22 | SELL | TRXUSDT | type=TIME | reason=max_time_bear | price=0.324500 | qty=425.816196 | pnl=-0.0852 | pnl_net=-0.3616 | profit_pct=-0.06% | time=121.6m
+2026-04-17 07:34:58 | BUY | ZECUSDT | entry=331.200000 | qty=0.603865 | capital=200.00 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-17 07:41:24 | BUY | TRXUSDT | entry=0.323700 | qty=494.284832 | capital=160.00 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-17 07:46:17 | BUY | ENJUSDT | entry=0.066560 | qty=1923.076923 | capital=128.00 | strategy=mean_reversion | risk_mode=normal | tp=4.95% | sl=-2.00%
+2026-04-17 08:10:21 | SELL | ENJUSDT | type=TIME | reason=early_cut_bear | price=0.065460 | qty=1923.076923 | pnl=-2.1154 | pnl_net=-2.3693 | profit_pct=-1.65% | time=24.1m
+2026-04-17 08:33:03 | BUY | KSMUSDT | entry=5.180000 | qty=24.710425 | capital=128.00 | strategy=mean_reversion | risk_mode=conservative | tp=4.95% | sl=-2.00%
+2026-04-17 09:34:46 | SELL | KSMUSDT | type=SL | reason=stop_loss_-2.00% | price=5.050000 | qty=24.710425 | pnl=-3.2124 | pnl_net=-3.4651 | profit_pct=-2.51% | time=61.7m
+2026-04-17 09:38:48 | BUY | SAPIENUSDT | entry=0.101400 | qty=1262.327416 | capital=128.00 | strategy=mean_reversion | risk_mode=aggressive | tp=5.69% | sl=-2.00%
+2026-04-17 09:44:12 | SELL | TRXUSDT | type=TIME | reason=max_time_bear | price=0.324100 | qty=494.284832 | pnl=0.1977 | pnl_net=-0.1225 | profit_pct=0.12% | time=122.8m
+2026-04-17 09:53:39 | PARTIAL SELL | SAPIENUSDT | price=0.106800 | qty=631.163708 | profit_pct=5.33%
+2026-04-17 10:12:32 | PARTIAL SELL | ZECUSDT | price=344.360000 | qty=0.301932 | profit_pct=3.97%
+2026-04-17 10:17:14 | SELL | ZECUSDT | type=TP | reason=tp_after_partial | price=345.630000 | qty=0.301932 | pnl=4.3569 | pnl_net=4.1525 | profit_pct=4.36% | time=162.3m
+2026-04-17 11:01:28 | BUY | ORDIUSDT | entry=6.560000 | qty=28.536585 | capital=187.20 | strategy=mean_reversion | risk_mode=normal | tp=5.69% | sl=-2.00%
+2026-04-17 11:06:12 | BUY | ARBUSDT | entry=0.133000 | qty=1126.015038 | capital=149.76 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-17 11:06:52 | SELL | ORDIUSDT | type=FAST_SL | reason=fast_loss_high_-2.0% | price=6.400000 | qty=28.536585 | pnl=-4.5659 | pnl_net=-4.9357 | profit_pct=-2.44% | time=5.4m
+2026-04-17 11:11:03 | BUY | ORDIUSDT | entry=6.479000 | qty=24.270412 | capital=157.25 | strategy=mean_reversion | risk_mode=normal | tp=5.69% | sl=-2.00%
+2026-04-17 11:30:44 | SELL | ORDIUSDT | type=SL | reason=stop_loss_-2.00% | price=6.340000 | qty=24.270412 | pnl=-3.3736 | pnl_net=-3.6847 | profit_pct=-2.15% | time=19.7m
+2026-04-17 11:39:32 | BUY | ORDIUSDT | entry=6.367000 | qty=24.697346 | capital=157.25 | strategy=mean_reversion | risk_mode=normal | tp=5.69% | sl=-2.00%
+2026-04-17 12:03:53 | SELL | SAPIENUSDT | type=TP | reason=tp_after_partial | price=0.109700 | qty=631.163708 | pnl=5.2387 | pnl_net=5.1054 | profit_pct=8.19% | time=145.1m
+2026-04-17 12:08:06 | BUY | UNIUSDT | entry=3.488000 | qty=39.73578 | capital=138.60 | strategy=mean_reversion | risk_mode=aggressive | tp=4.21% | sl=-2.00%
+2026-04-17 12:08:39 | SELL | ORDIUSDT | type=TIME | reason=early_cut_bear | price=6.267000 | qty=24.697346 | pnl=-2.4697 | pnl_net=-2.7818 | profit_pct=-1.57% | time=29.1m
+2026-04-17 12:22:10 | BUY | WLDUSDT | entry=0.308400 | qty=461.505577 | capital=142.33 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-17 12:26:55 | SELL | WLDUSDT | type=FAST_SL | reason=fast_loss_low_-1.2% | price=0.296700 | qty=461.505577 | pnl=-5.3996 | pnl_net=-5.6789 | profit_pct=-3.79% | time=4.7m
+2026-04-17 12:27:32 | SELL | ARBUSDT | type=DEAD | reason=dead_trade:time>60m,negative_progress,significant_loss>-1.20% | price=0.131400 | qty=1126.015038 | pnl=-1.8016 | pnl_net=-2.0993 | profit_pct=-1.20% | time=81.3m
+2026-04-17 12:31:46 | BUY | LTCUSDT | entry=56.700000 | qty=3.038454 | capital=172.28 | strategy=mean_reversion | risk_mode=conservative | tp=4.21% | sl=-2.00%
+2026-04-17 12:31:47 | BUY | ZECUSDT | entry=343.500000 | qty=0.401235 | capital=137.82 | strategy=mean_reversion | risk_mode=aggressive | tp=4.21% | sl=-2.00%
+2026-04-17 14:12:35 | SELL | UNIUSDT | type=TRAILING | reason=trailing_stop | price=3.543000 | qty=39.735780 | pnl=2.1855 | pnl_net=1.9061 | profit_pct=1.58% | time=124.5m
+2026-04-17 14:16:49 | BUY | BTCUSDT | entry=77570.210000 | qty=0.001779 | capital=137.98 | strategy=trend | risk_mode=conservative | tp=6.38% | sl=-2.00%
+2026-04-17 14:22:20 | SELL | ZECUSDT | type=SL | reason=stop_loss_-2.00% | price=336.370000 | qty=0.401235 | pnl=-2.8608 | pnl_net=-3.1336 | profit_pct=-2.08% | time=110.6m
+2026-04-17 14:26:32 | BUY | ZECUSDT | entry=335.820000 | qty=0.41078 | capital=137.95 | strategy=mean_reversion | risk_mode=conservative | tp=4.21% | sl=-2.00%
+2026-04-17 15:05:13 | SELL | ZECUSDT | type=DEAD | reason=dead_trade:negative_progress,significant_loss>-1.34%,range<0.50% | price=331.330000 | qty=0.410780 | pnl=-1.8444 | pnl_net=-2.1185 | profit_pct=-1.34% | time=38.7m
+2026-04-17 15:05:18 | BUY | WLDUSDT | entry=0.294600 | qty=468.255665 | capital=137.95 | strategy=mean_reversion | risk_mode=normal | tp=4.95% | sl=-2.00%
+2026-04-17 15:10:05 | SELL | WLDUSDT | type=FAST_SL | reason=fast_loss_medium_-1.5% | price=0.287700 | qty=468.255665 | pnl=-3.2310 | pnl_net=-3.5036 | profit_pct=-2.34% | time=4.8m
+2026-04-17 15:14:45 | BUY | LINKUSDT | entry=9.640000 | qty=14.309971 | capital=137.95 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-17 15:34:31 | SELL | LTCUSDT | type=TIME | reason=max_time_sideways | price=56.540000 | qty=3.038454 | pnl=-0.4862 | pnl_net=-0.8302 | profit_pct=-0.28% | time=182.8m
+2026-04-17 15:57:41 | BUY | HBARUSDT | entry=0.090330 | qty=1603.172359 | capital=144.81 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-17 17:19:09 | SELL | BTCUSDT | type=TIME | reason=max_time_sideways | price=77475.720000 | qty=0.001779 | pnl=-0.1681 | pnl_net=-0.4439 | profit_pct=-0.12% | time=182.3m
+2026-04-17 17:34:01 | BUY | PEPEUSDT | entry=0.000004 | qty=35951745.450025 | capital=143.45 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-17 18:06:38 | SELL | HBARUSDT | type=TIME | reason=max_time_bear | price=0.090870 | qty=1603.172359 | pnl=0.8657 | pnl_net=0.5752 | profit_pct=0.60% | time=129.0m
+2026-04-17 19:35:14 | SELL | LINKUSDT | type=TIME | reason=max_time_bull | price=9.710000 | qty=14.309971 | pnl=1.0017 | pnl_net=0.7248 | profit_pct=0.73% | time=260.5m
+2026-04-17 20:19:51 | SELL | PEPEUSDT | type=DEAD | reason=dead_trade:time>60m,negative_progress,significant_loss>-1.25% | price=0.000004 | qty=35951745.450025 | pnl=-1.7976 | pnl_net=-2.0827 | profit_pct=-1.25% | time=165.8m
+2026-04-17 23:05:15 | BUY | FETUSDT | entry=0.227300 | qty=879.894413 | capital=200.00 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 00:32:43 | BUY | GIGGLEUSDT | entry=42.460000 | qty=3.768252 | capital=160.00 | strategy=mean_reversion | risk_mode=normal | tp=4.95% | sl=-2.00%
+2026-04-18 00:53:06 | PARTIAL SELL | GIGGLEUSDT | price=43.960000 | qty=1.884126 | profit_pct=3.53%
+2026-04-18 00:56:30 | BUY | AVAXUSDT | entry=9.650000 | qty=14.92228 | capital=144.00 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 01:12:55 | SELL | FETUSDT | type=TIME | reason=max_time_bear | price=0.229200 | qty=879.894413 | pnl=1.6718 | pnl_net=1.2701 | profit_pct=0.84% | time=127.7m
+2026-04-18 01:25:00 | SELL | GIGGLEUSDT | type=TP | reason=extended_tp_7.4% | price=46.150000 | qty=1.884126 | pnl=6.9524 | pnl_net=6.7855 | profit_pct=8.69% | time=52.3m
+2026-04-18 01:36:24 | BUY | ORDIUSDT | entry=5.846000 | qty=29.284981 | capital=171.20 | strategy=mean_reversion | risk_mode=normal | tp=4.95% | sl=-2.00%
+2026-04-18 02:51:42 | BUY | ONTUSDT | entry=0.083120 | qty=1647.73821 | capital=136.96 | strategy=mean_reversion | risk_mode=normal | tp=4.95% | sl=-2.00%
+2026-04-18 03:39:53 | SELL | ORDIUSDT | type=TIME | reason=max_time_bear | price=5.903000 | qty=29.284981 | pnl=1.6692 | pnl_net=1.3252 | profit_pct=0.98% | time=123.5m
+2026-04-18 04:04:12 | SELL | AVAXUSDT | type=TIME | reason=max_time_sideways | price=9.700000 | qty=14.922280 | pnl=0.7461 | pnl_net=0.4574 | profit_pct=0.52% | time=187.7m
+2026-04-18 04:55:53 | BUY | ORDIUSDT | entry=5.663000 | qty=30.479958 | capital=172.61 | strategy=mean_reversion | risk_mode=normal | tp=4.95% | sl=-2.00%
+2026-04-18 05:24:11 | BUY | AVAXUSDT | entry=9.600000 | qty=14.384 | capital=138.09 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 05:40:46 | SELL | ORDIUSDT | type=TIME | reason=early_cut_bear | price=5.578000 | qty=30.479958 | pnl=-2.5908 | pnl_net=-2.9334 | profit_pct=-1.50% | time=44.9m
+2026-04-18 05:48:14 | BUY | ETHUSDT | entry=2378.880000 | qty=0.060949 | capital=144.99 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 06:08:45 | SELL | ONTUSDT | type=DEAD | reason=dead_trade:time>60m,negative_progress,significant_loss>-1.05% | price=0.082250 | qty=1647.738210 | pnl=-1.4335 | pnl_net=-1.7060 | profit_pct=-1.05% | time=197.1m
+2026-04-18 06:20:23 | BUY | DOGEUSDT | entry=0.096760 | qty=1481.857958 | capital=143.38 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 07:04:36 | SELL | AVAXUSDT | type=DEAD | reason=dead_trade:time>45m,negative_progress,significant_loss>-1.25%,range<0.50% | price=9.480000 | qty=14.384000 | pnl=-1.7261 | pnl_net=-2.0005 | profit_pct=-1.25% | time=100.4m
+2026-04-18 07:08:48 | BUY | SUIUSDT | entry=0.976400 | qty=145.764995 | capital=142.32 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 08:14:12 | SELL | ETHUSDT | type=DEAD | reason=dead_trade:time>45m,negative_progress,significant_loss>-1.05%,range<0.50% | price=2353.800000 | qty=0.060949 | pnl=-1.5286 | pnl_net=-1.8171 | profit_pct=-1.05% | time=146.0m
+2026-04-18 08:25:56 | BUY | NEARUSDT | entry=1.392000 | qty=102.627943 | capital=142.86 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 08:38:45 | SELL | SUIUSDT | type=DEAD | reason=dead_trade:time>45m,negative_progress,significant_loss>-1.12%,range<0.50% | price=0.965500 | qty=145.764995 | pnl=-1.5888 | pnl_net=-1.8719 | profit_pct=-1.12% | time=90.0m
+2026-04-18 08:42:17 | BUY | LINKUSDT | entry=9.350000 | qty=15.267536 | capital=142.75 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 08:42:55 | SELL | DOGEUSDT | type=DEAD | reason=dead_trade:time>45m,negative_progress,significant_loss>-1.11%,range<0.50% | price=0.095690 | qty=1481.857958 | pnl=-1.5856 | pnl_net=-1.8708 | profit_pct=-1.11% | time=142.5m
+2026-04-18 08:46:20 | BUY | BTCUSDT | entry=75828.310000 | qty=0.001884 | capital=142.88 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 09:46:47 | BUY | ALICEUSDT | entry=0.199000 | qty=574.384272 | capital=114.30 | strategy=mean_reversion | risk_mode=normal | tp=5.69% | sl=-2.00%
+2026-04-18 09:51:39 | BUY | PORTALUSDT | entry=0.012510 | qty=7309.510476 | capital=91.44 | strategy=mean_reversion | risk_mode=normal | tp=5.69% | sl=-2.00%
+2026-04-18 09:52:16 | SELL | ALICEUSDT | type=FAST_SL | reason=fast_loss_high_-2.0% | price=0.192500 | qty=574.384272 | pnl=-3.7335 | pnl_net=-3.9584 | profit_pct=-3.27% | time=5.5m
+2026-04-18 10:06:00 | BUY | ACEUSDT | entry=0.141000 | qty=680.950885 | capital=96.01 | strategy=mean_reversion | risk_mode=normal | tp=5.69% | sl=-2.00%
+2026-04-18 10:06:38 | SELL | PORTALUSDT | type=FAST_SL | reason=fast_loss_high_-2.0% | price=0.012110 | qty=7309.510476 | pnl=-2.9238 | pnl_net=-3.1038 | profit_pct=-3.20% | time=15.0m
+2026-04-18 10:16:38 | SELL | NEARUSDT | type=DEAD | reason=dead_trade:time>45m,negative_progress,significant_loss>-1.22%,range<0.50% | price=1.375000 | qty=102.627943 | pnl=-1.7447 | pnl_net=-2.0286 | profit_pct=-1.22% | time=110.7m
+2026-04-18 10:21:47 | BUY | NEARUSDT | entry=1.375000 | qty=89.942745 | capital=123.67 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 11:10:00 | BUY | GIGGLEUSDT | entry=38.790000 | qty=5.155968 | capital=200.00 | strategy=mean_reversion | risk_mode=normal | tp=4.95% | sl=-2.00%
+2026-04-18 12:17:31 | SELL | GIGGLEUSDT | type=DEAD | reason=dead_trade:time>45m,negative_progress,significant_loss>-1.01% | price=38.400000 | qty=5.155968 | pnl=-2.0108 | pnl_net=-2.4088 | profit_pct=-1.01% | time=67.5m
+2026-04-18 12:43:40 | BUY | GIGGLEUSDT | entry=37.100000 | qty=5.390836 | capital=200.00 | strategy=mean_reversion | risk_mode=normal | tp=4.95% | sl=-2.00%
+2026-04-18 13:34:04 | BUY | WLDUSDT | entry=0.269900 | qty=741.015191 | capital=200.00 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 14:01:04 | SELL | GIGGLEUSDT | type=DEAD | reason=dead_trade:time>45m,negative_progress,significant_loss>-1.35% | price=36.600000 | qty=5.390836 | pnl=-2.6954 | pnl_net=-3.0927 | profit_pct=-1.35% | time=77.4m
+2026-04-18 14:09:47 | BUY | FETUSDT | entry=0.219400 | qty=911.577028 | capital=200.00 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 14:14:16 | BUY | PROMUSDT | entry=2.100000 | qty=71.428571 | capital=150.00 | strategy=mean_reversion | risk_mode=normal | tp=5.69% | sl=-2.00%
+2026-04-18 14:23:23 | SELL | PROMUSDT | type=FAST_SL | reason=fast_loss_high_-2.0% | price=2.048000 | qty=71.428571 | pnl=-3.7143 | pnl_net=-4.0106 | profit_pct=-2.48% | time=9.1m
+2026-04-18 14:41:10 | BUY | PROMUSDT | entry=2.137000 | qty=70.191858 | capital=150.00 | strategy=mean_reversion | risk_mode=normal | tp=5.69% | sl=-2.00%
+2026-04-18 14:50:12 | BUY | HIGHUSDT | entry=0.376000 | qty=299.202128 | capital=112.50 | strategy=mean_reversion | risk_mode=normal | tp=5.69% | sl=-2.00%
+2026-04-18 14:59:25 | BUY | NEARUSDT | entry=1.358000 | qty=62.131811 | capital=84.38 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 15:32:37 | SELL | HIGHUSDT | type=TIME | reason=early_cut_sideways | price=0.370000 | qty=299.202128 | pnl=-1.7952 | pnl_net=-2.0184 | profit_pct=-1.60% | time=42.4m
+2026-04-18 15:37:50 | BUY | LINKUSDT | entry=9.280000 | qty=9.849811 | capital=91.41 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 15:37:50 | SELL | FETUSDT | type=DEAD | reason=dead_trade:time>45m,negative_progress,significant_loss>-1.00% | price=0.217200 | qty=911.577028 | pnl=-2.0055 | pnl_net=-2.4035 | profit_pct=-1.00% | time=88.1m
+2026-04-18 15:37:51 | BUY | ZECUSDT | entry=321.330000 | qty=0.36895 | capital=118.55 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 15:38:12 | SELL | WLDUSDT | type=DEAD | reason=dead_trade:time>45m,negative_progress,significant_loss>-1.00%,range<0.50% | price=0.267200 | qty=741.015191 | pnl=-2.0007 | pnl_net=-2.3987 | profit_pct=-1.00% | time=124.1m
+2026-04-18 15:42:03 | BUY | FETUSDT | entry=0.216900 | qty=640.461114 | capital=138.92 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 15:42:07 | BUY | DOGEUSDT | entry=0.094520 | qty=1102.274775 | capital=104.19 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 15:42:31 | PARTIAL SELL | PROMUSDT | price=2.254000 | qty=35.095929 | profit_pct=5.47%
+2026-04-18 15:55:59 | SELL | PROMUSDT | type=TP | reason=tp_after_partial | price=2.272000 | qty=35.095929 | pnl=4.7380 | pnl_net=4.5832 | profit_pct=6.32% | time=74.8m
+2026-04-18 15:59:47 | BUY | AAVEUSDT | entry=104.670000 | qty=1.104808 | capital=115.64 | strategy=mean_reversion | risk_mode=normal | tp=4.95% | sl=-2.00%
+2026-04-18 16:47:44 | SELL | AAVEUSDT | type=DEAD | reason=dead_trade:time>45m,negative_progress,significant_loss>-1.14% | price=103.480000 | qty=1.104808 | pnl=-1.3147 | pnl_net=-1.5447 | profit_pct=-1.14% | time=47.9m
+2026-04-18 16:52:26 | BUY | THETAUSDT | entry=0.222000 | qty=520.902067 | capital=115.64 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 17:42:46 | SELL | FETUSDT | type=TIME | reason=max_time_bear | price=0.218900 | qty=640.461114 | pnl=1.2809 | pnl_net=1.0018 | profit_pct=0.92% | time=120.7m
+2026-04-18 17:46:42 | SELL | LINKUSDT | type=TIME | reason=max_time_bear | price=9.320000 | qty=9.849811 | pnl=0.3940 | pnl_net=0.2108 | profit_pct=0.43% | time=128.9m
+2026-04-18 17:46:43 | SELL | DOGEUSDT | type=TIME | reason=max_time_bear | price=0.095000 | qty=1102.274775 | pnl=0.5291 | pnl_net=0.3202 | profit_pct=0.51% | time=124.6m
+2026-04-18 18:40:44 | SELL | ZECUSDT | type=TIME | reason=max_time_sideways | price=322.740000 | qty=0.368950 | pnl=0.5202 | pnl_net=0.2826 | profit_pct=0.44% | time=182.9m
+2026-04-18 18:51:21 | SELL | THETAUSDT | type=DEAD | reason=dead_trade:time>45m,negative_progress,significant_loss>-1.35%,range<0.50% | price=0.219000 | qty=520.902067 | pnl=-1.5627 | pnl_net=-1.7924 | profit_pct=-1.35% | time=118.9m
+2026-04-18 20:38:32 | SELL | NEARUSDT | type=DEAD | reason=dead_trade:time>45m,negative_progress,significant_loss>-1.03%,range<0.50% | price=1.344000 | qty=62.131811 | pnl=-0.8698 | pnl_net=-1.0377 | profit_pct=-1.03% | time=339.1m
+2026-04-18 21:00:13 | BUY | AAVEUSDT | entry=101.140000 | qty=2.471821 | capital=250.00 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 21:16:51 | BUY | FETUSDT | entry=0.212500 | qty=882.352941 | capital=187.50 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 21:24:23 | BUY | TAOUSDT | entry=241.100000 | qty=0.583264 | capital=140.62 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 21:28:28 | SELL | AAVEUSDT | type=TIME | reason=early_cut_bear | price=99.300000 | qty=2.471821 | pnl=-4.5482 | pnl_net=-5.0436 | profit_pct=-1.82% | time=28.2m
+2026-04-18 21:31:50 | BUY | AAVEUSDT | entry=99.370000 | qty=1.690337 | capital=167.97 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 22:36:12 | SELL | AAVEUSDT | type=DEAD | reason=dead_trade:time>45m,negative_progress,significant_loss>-1.20%,range<0.50% | price=98.180000 | qty=1.690337 | pnl=-2.0115 | pnl_net=-2.3454 | profit_pct=-1.20% | time=64.4m
+2026-04-18 22:40:54 | BUY | TONUSDT | entry=1.280000 | qty=131.225586 | capital=167.97 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 23:23:04 | SELL | FETUSDT | type=TIME | reason=max_time_bear | price=0.215100 | qty=882.352941 | pnl=2.2941 | pnl_net=1.9168 | profit_pct=1.22% | time=126.2m
+2026-04-18 23:34:21 | BUY | AAVEUSDT | entry=96.320000 | qty=1.794555 | capital=172.85 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-18 23:45:50 | SELL | TAOUSDT | type=TIME | reason=max_time_bear | price=242.500000 | qty=0.583264 | pnl=0.8166 | pnl_net=0.5345 | profit_pct=0.58% | time=141.5m
+2026-04-18 23:49:05 | BUY | ORDIUSDT | entry=4.613000 | qty=35.724024 | capital=164.79 | strategy=mean_reversion | risk_mode=normal | tp=4.95% | sl=-2.00%
+2026-04-19 00:04:16 | SELL | AAVEUSDT | type=TIME | reason=early_cut_bear | price=94.650000 | qty=1.794555 | pnl=-2.9969 | pnl_net=-3.3396 | profit_pct=-1.73% | time=29.9m
+2026-04-19 00:11:16 | BUY | AAVEUSDT | entry=95.470000 | qty=1.747241 | capital=166.81 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-19 00:18:57 | SELL | ORDIUSDT | type=TIME | reason=early_cut_bear | price=4.539000 | qty=35.724024 | pnl=-2.6436 | pnl_net=-2.9705 | profit_pct=-1.60% | time=29.9m
+2026-04-19 00:22:12 | BUY | ORDIUSDT | entry=4.542000 | qty=36.615047 | capital=166.31 | strategy=mean_reversion | risk_mode=normal | tp=5.69% | sl=-2.00%
+2026-04-19 00:37:15 | SELL | ORDIUSDT | type=SL | reason=stop_loss_-2.00% | price=4.412000 | qty=36.615047 | pnl=-4.7600 | pnl_net=-5.0878 | profit_pct=-2.86% | time=15.0m
+2026-04-19 00:40:29 | BUY | ORDIUSDT | entry=4.410000 | qty=37.711007 | capital=166.31 | strategy=mean_reversion | risk_mode=normal | tp=4.95% | sl=-2.00%
+2026-04-19 00:44:39 | SELL | ORDIUSDT | type=FAST_SL | reason=fast_loss_medium_-1.5% | price=4.343000 | qty=37.711007 | pnl=-2.5266 | pnl_net=-2.8567 | profit_pct=-1.52% | time=4.2m
+2026-04-19 00:51:30 | BUY | ORDIUSDT | entry=4.335000 | qty=38.363447 | capital=166.31 | strategy=mean_reversion | risk_mode=normal | tp=4.95% | sl=-2.00%
+2026-04-19 00:58:48 | SELL | ORDIUSDT | type=FAST_SL | reason=fast_loss_medium_-1.5% | price=4.165000 | qty=38.363447 | pnl=-6.5218 | pnl_net=-6.8479 | profit_pct=-3.92% | time=7.3m
+2026-04-19 01:02:32 | BUY | ORDIUSDT | entry=4.174000 | qty=39.843206 | capital=166.31 | strategy=mean_reversion | risk_mode=normal | tp=4.95% | sl=-2.00%
+2026-04-19 01:24:12 | SELL | ORDIUSDT | type=SL | reason=stop_loss_-2.00% | price=4.078000 | qty=39.843206 | pnl=-3.8249 | pnl_net=-4.1537 | profit_pct=-2.30% | time=21.7m
+2026-04-19 01:28:19 | SELL | AAVEUSDT | type=DEAD | reason=dead_trade:time>45m,negative_progress,significant_loss>-1.05% | price=94.470000 | qty=1.747241 | pnl=-1.7472 | pnl_net=-2.0791 | profit_pct=-1.05% | time=77.1m
+2026-04-19 01:31:32 | BUY | REQUSDT | entry=0.125700 | qty=1654.795644 | capital=208.01 | strategy=mean_reversion | risk_mode=normal | tp=5.69% | sl=-2.00%
+2026-04-19 01:38:48 | SELL | TONUSDT | type=DEAD | reason=dead_trade:time>45m,negative_progress,significant_loss>-1.02%,range<0.50% | price=1.267000 | qty=131.225586 | pnl=-1.7059 | pnl_net=-2.0402 | profit_pct=-1.02% | time=177.9m
+2026-04-19 01:38:55 | BUY | GIGGLEUSDT | entry=31.670000 | qty=6.251912 | capital=198.00 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-19 01:39:17 | SELL | REQUSDT | type=FAST_SL | reason=fast_loss_high_-2.0% | price=0.120600 | qty=1654.795644 | pnl=-8.4395 | pnl_net=-8.8470 | profit_pct=-4.06% | time=7.8m
+2026-04-19 01:53:23 | BUY | TREEUSDT | entry=0.067200 | qty=2983.638218 | capital=200.50 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-19 02:15:09 | BUY | PHBUSDT | entry=0.150000 | qty=1002.502441 | capital=150.38 | strategy=mean_reversion | risk_mode=normal | tp=5.69% | sl=-2.00%
+2026-04-19 02:26:05 | SELL | PHBUSDT | type=FAST_SL | reason=fast_loss_high_-2.0% | price=0.147000 | qty=1002.502441 | pnl=-3.0075 | pnl_net=-3.3053 | profit_pct=-2.00% | time=10.9m
+2026-04-19 02:29:40 | SELL | TREEUSDT | type=DEAD | reason=dead_trade:negative_progress,significant_loss>-1.19%,range<0.50% | price=0.066400 | qty=2983.638218 | pnl=-2.3869 | pnl_net=-2.7855 | profit_pct=-1.19% | time=36.3m
+2026-04-19 02:40:37 | BUY | TREEUSDT | entry=0.066500 | qty=3015.044937 | capital=200.50 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-19 03:34:59 | BUY | ZROUSDT | entry=1.520000 | qty=98.931162 | capital=150.38 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-19 04:08:08 | SELL | GIGGLEUSDT | type=TIME | reason=max_time_bear | price=32.130000 | qty=6.251912 | pnl=2.8759 | pnl_net=2.4770 | profit_pct=1.45% | time=149.2m
+2026-04-19 04:19:06 | PARTIAL SELL | ZROUSDT | price=1.579000 | qty=49.465581 | profit_pct=3.88%
+2026-04-19 04:22:20 | BUY | SOLUSDT | entry=84.640000 | qty=2.13939 | capital=181.08 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-19 04:22:45 | SELL | ZROUSDT | type=TP | reason=tp_after_partial | price=1.584000 | qty=49.465581 | pnl=3.1658 | pnl_net=3.0123 | profit_pct=4.21% | time=47.8m
+2026-04-19 04:25:57 | BUY | ETHUSDT | entry=2303.080000 | qty=0.06713 | capital=154.61 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-19 05:27:42 | SELL | TREEUSDT | type=TIME | reason=max_time_bear | price=0.066800 | qty=3015.044937 | pnl=0.9045 | pnl_net=0.5026 | profit_pct=0.45% | time=167.1m
+2026-04-19 06:28:15 | SELL | ETHUSDT | type=TIME | reason=max_time_bear | price=2315.230000 | qty=0.067130 | pnl=0.8156 | pnl_net=0.5056 | profit_pct=0.53% | time=122.3m
+2026-04-19 06:34:49 | BUY | HIGHUSDT | entry=0.303000 | qty=675.678253 | capital=204.73 | strategy=mean_reversion | risk_mode=normal | tp=5.69% | sl=-2.00%
+2026-04-19 06:35:15 | SELL | HIGHUSDT | type=FAST_SL | reason=fast_loss_high_-2.0% | price=0.296000 | qty=675.678253 | pnl=-4.7297 | pnl_net=-5.1345 | profit_pct=-2.31% | time=0.4m
+2026-04-19 06:38:15 | BUY | HIGHUSDT | entry=0.289000 | qty=708.410072 | capital=204.73 | strategy=mean_reversion | risk_mode=normal | tp=5.69% | sl=-2.00%
+2026-04-19 06:38:19 | BUY | TREEUSDT | entry=0.065300 | qty=2351.422405 | capital=153.55 | strategy=mean_reversion | risk_mode=normal | tp=4.95% | sl=-2.00%
+2026-04-19 06:49:08 | PARTIAL SELL | HIGHUSDT | price=0.307000 | qty=354.205036 | profit_pct=6.23%
+2026-04-19 06:49:08 | SELL | HIGHUSDT | type=TP | reason=tp_after_partial | price=0.307000 | qty=354.205036 | pnl=6.3757 | pnl_net=6.1646 | profit_pct=6.23% | time=10.9m
+2026-04-19 06:59:13 | BUY | BIOUSDT | entry=0.030000 | qty=5544.784665 | capital=166.34 | strategy=mean_reversion | risk_mode=normal | tp=4.95% | sl=-2.00%
+2026-04-19 06:59:15 | SELL | TREEUSDT | type=TIME | reason=early_cut_bear | price=0.064100 | qty=2351.422405 | pnl=-2.8217 | pnl_net=-3.1260 | profit_pct=-1.84% | time=20.9m
+2026-04-19 07:13:13 | BUY | ZROUSDT | entry=1.568000 | qty=104.046317 | capital=163.14 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-19 07:53:54 | SELL | ZROUSDT | type=DEAD | reason=dead_trade:negative_progress,significant_loss>-1.08%,range<0.50% | price=1.551000 | qty=104.046317 | pnl=-1.7688 | pnl_net=-2.0933 | profit_pct=-1.08% | time=40.7m
+2026-04-19 07:57:55 | PARTIAL SELL | BIOUSDT | price=0.031100 | qty=2772.392333 | profit_pct=3.67%
+2026-04-19 08:08:45 | SELL | SOLUSDT | type=TIME | reason=max_time_sideways | price=84.990000 | qty=2.139390 | pnl=0.7488 | pnl_net=0.3859 | profit_pct=0.41% | time=226.4m
+2026-04-19 08:14:07 | BUY | ZROUSDT | entry=1.537000 | qty=149.126257 | capital=229.21 | strategy=mean_reversion | risk_mode=normal | tp=4.21% | sl=-2.00%
+2026-04-19 08:14:39 | SELL | BIOUSDT | type=TRAILING | reason=trailing_stop | price=0.030500 | qty=2772.392333 | pnl=1.3862 | pnl_net=1.2185 | profit_pct=1.67% | time=75.4m

@@ -37,6 +37,14 @@ COMMON_COLUMNS = [
     "ai_trade_decision",
     "ai_context_risk",
     "trade_filter_reason",
+    "prob_live",
+    "prob_historical",
+    "prob_final",
+    "decision_source",
+    "models_agree",
+    "shadow_prediction",
+    "pnl_net",
+    "result_net",
 ]
 
 HISTORICAL_FILE = "trades_dataset_merged.csv"

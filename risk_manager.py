@@ -63,6 +63,7 @@ FIELDNAMES = [
     "prob_final",
     "decision_source",
     "models_agree",
+    "shadow_prediction",
 ]
 
 
@@ -160,6 +161,7 @@ def register_trade(data=None):
         "prob_final": data.get("prob_final", ""),
         "decision_source": data.get("decision_source", ""),
         "models_agree": data.get("models_agree", ""),
+        "shadow_prediction": data.get("shadow_prediction", ""),
     }
 
     try:
